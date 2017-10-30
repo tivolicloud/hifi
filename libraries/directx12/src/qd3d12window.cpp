@@ -68,12 +68,16 @@ void QD3D12WindowPrivate::initialize()
     if (initialized)
         return;
 
+    m_parent->setSurfaceType(QSurface::OpenGLSurface);
+
     swapChainBufferCount = 2;
     HWND hwnd = reinterpret_cast<HWND>(m_parent->winId());
 
     ComPtr<ID3D12Debug> debugController;
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+    {
         debugController->EnableDebugLayer();
+    }
 
     ComPtr<IDXGIFactory4> factory;
     if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)))) {
@@ -358,10 +362,10 @@ void QD3D12WindowPrivate::flush(const QRegion &region)
     m_parent->afterPresent();
 }
 
-QD3D12Window::QD3D12Window(QWidget *parent) : QWidget(parent)
+QD3D12Window::QD3D12Window(QWindow* parent) : QWindow(parent)
 {
     m_private = new QD3D12WindowPrivate(this);
-    // parent->setSurfaceType(QSurface::OpenGLSurface);
+    m_private->initialize();
 }
 
 void QD3D12Window::beginPaint(const QRegion &region)
@@ -374,6 +378,33 @@ void QD3D12Window::flush(const QRegion &region)
     m_private->flush(region);
 }
 
+bool QD3D12Window::event(QEvent* event)
+{
+    switch (event->type())
+    {
+        case QEvent::WinIdChange:
+        {
+            emit HandleChanged(winId());
+            break;
+        }
+
+        case QEvent::FocusIn:
+        {
+            break;
+        }
+
+        case QEvent::FocusOut:
+        {
+            break;
+        }
+            
+
+        default:
+            break;
+    }
+
+    return QWindow::event(event);
+}
 
 void QD3D12Window::setExtraRenderTargetCount(int count)
 {
@@ -399,8 +430,8 @@ void QD3D12Window::resizeEvent(QResizeEvent *event)
         return;
     }
 
-    m_private->resize();
-    resizeD3D(size());
+    // m_private->resize();
+    // resizeD3D(size());
     paintD3D();
     afterPresent();
 }
@@ -626,4 +657,3 @@ QD3D12Window::Fence::~Fence()
         CloseHandle(event);
 }
 
-QT_END_NAMESPACE

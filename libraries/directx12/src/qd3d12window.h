@@ -15,7 +15,7 @@ using namespace Microsoft::WRL;
 
 class QD3D12WindowPrivate;
 
-class QD3D12Window : public QWidget
+class QD3D12Window : public QWindow
 {
     Q_OBJECT
 
@@ -30,12 +30,13 @@ public:
         Q_DISABLE_COPY(Fence)
     };
 
-    QD3D12Window(QWidget* parent = Q_NULLPTR);
+    QD3D12Window(QWindow* parent = Q_NULLPTR);
 
     void beginPaint(const QRegion &region);
     void flush(const QRegion &region);
 
 
+    bool event(QEvent* event) override;
     void setExtraRenderTargetCount(int count);
 
     virtual void initializeD3D();
@@ -78,9 +79,14 @@ public:
 
     QImage readbackRGBA8888(ID3D12Resource *rt, D3D12_RESOURCE_STATES rtState, ID3D12GraphicsCommandList *commandList);
 
+signals:
+    void HandleChanged(WId handle);
+
 protected:
-    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
+
+    // FIXME: paintevent
+    void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent *) override;
 
     QD3D12WindowPrivate* m_private;
 };

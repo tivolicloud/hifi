@@ -80,7 +80,7 @@ class QTestWindow : public QD3D12Window
 public:
     RateCounter fps;
 
-    void initializeD3D()
+    void initializeD3D() override
     {
         f = createFence();
         ID3D12Device *dev = device();
@@ -91,12 +91,12 @@ public:
         commandList->Close();
     }
 
-    void resizeD3D(const QSize &size)
+    void resizeD3D(const QSize &size) override
     {
         qDebug("resize %d %d", size.width(), size.height());
     }
 
-    void paintD3D()
+    void paintD3D() override
     {
         commandAllocator()->Reset();
         commandList->Reset(commandAllocator(), Q_NULLPTR);
@@ -115,7 +115,7 @@ public:
         ID3D12CommandList *commandLists[] = { commandList.Get() };
         commandQueue()->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-        update(); // schedule the next frame by posting an UpdateRequest event
+        waitForGPU(f);
     }
 
     void afterPresent()
@@ -132,7 +132,6 @@ public:
     {
         delete f;
     }
-
 
 private:
     Fence *f;
@@ -171,22 +170,22 @@ hifi.gpu=true
 )V0G0N";
 
 int main(int argc, char** argv) {    
-    QApplication app(argc, argv);
-    qInstallMessageHandler(messageHandler);
-    QLoggingCategory::setFilterRules(LOG_FILTER_RULES);
+    QGuiApplication app(argc, argv);
+    // qInstallMessageHandler(messageHandler);
+    // QLoggingCategory::setFilterRules(LOG_FILTER_RULES);
     
     QTestWindow window;
     window.resize(1280, 720);
+    window.initializeD3D();
     window.showNormal();
 
-#if 0
     QTimer timer;
     timer.setInterval(1); // Qt::CoarseTimer acceptable
     app.connect(&timer, &QTimer::timeout, &app, [&] {
-        window.draw();
+        window.paintD3D();
+        window.requestUpdate();
     });
     timer.start();
-#endif
     app.exec();
     return 0;
 }
