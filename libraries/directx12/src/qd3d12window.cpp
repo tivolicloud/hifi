@@ -415,8 +415,8 @@ void QD3D12Window::resizeEvent(QResizeEvent *event)
         return;
     }
 
-    // m_private->resize();
-    // resizeD3D(size());
+    m_private->resize();
+    resizeD3D(size());
     paintD3D();
     afterPresent();
 }
