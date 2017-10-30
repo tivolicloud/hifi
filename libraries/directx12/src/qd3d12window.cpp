@@ -13,8 +13,7 @@ public:
 
     ~QD3D12WindowPrivate();
 
-    void beginPaint(const QRegion &region);
-    void flush(const QRegion &region);
+    void flush();
 
     void initialize();
     void setupRenderTargets();
@@ -339,17 +338,8 @@ QD3D12WindowPrivate::~QD3D12WindowPrivate()
 {
 }
 
-void QD3D12WindowPrivate::beginPaint(const QRegion &region)
+void QD3D12WindowPrivate::flush()
 {
-    Q_UNUSED(region);
-
-    initialize();
-}
-
-void QD3D12WindowPrivate::flush(const QRegion &region)
-{
-    Q_UNUSED(region);
-
     HRESULT hr = swapChain->Present(1, 0);
     if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
         deviceLost();
@@ -368,14 +358,9 @@ QD3D12Window::QD3D12Window(QWindow* parent) : QWindow(parent)
     m_private->initialize();
 }
 
-void QD3D12Window::beginPaint(const QRegion &region)
+void QD3D12Window::flush()
 {
-    m_private->beginPaint(region);
-}
-
-void QD3D12Window::flush(const QRegion &region)
-{
-    m_private->flush(region);
+    m_private->flush();
 }
 
 bool QD3D12Window::event(QEvent* event)

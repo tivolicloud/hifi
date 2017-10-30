@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
     timer.setInterval(1); // Qt::CoarseTimer acceptable
     app.connect(&timer, &QTimer::timeout, &app, [&] {
         window.paintD3D();
-        window.requestUpdate();
+        window.flush();
     });
     timer.start();
     app.exec();

@@ -32,8 +32,7 @@ public:
 
     QD3D12Window(QWindow* parent = Q_NULLPTR);
 
-    void beginPaint(const QRegion &region);
-    void flush(const QRegion &region);
+    void flush();
 
 
     bool event(QEvent* event) override;
