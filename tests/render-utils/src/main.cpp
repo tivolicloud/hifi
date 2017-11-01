@@ -83,8 +83,8 @@ public:
     void initializeD3D() override
     {
         f = createFence();
-        ID3D12Device *dev = device();
-        if (FAILED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator(), Q_NULLPTR, IID_PPV_ARGS(&commandList)))) {
+        ID3D12Device *dev = dxDevice();
+        if (FAILED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, dxCommandAllocator(), Q_NULLPTR, IID_PPV_ARGS(&commandList)))) {
             qWarning("Failed to create command list");
             return;
         }
@@ -98,24 +98,33 @@ public:
 
     void paintD3D() override
     {
-        commandAllocator()->Reset();
-        commandList->Reset(commandAllocator(), Q_NULLPTR);
+        // TODO: This is check is needed as this example does not handle shutdown properly, 
+        //       and the QT timer could trigger a render after the window is closed. 
+        if (isVisible())
+        {
+            dxCommandAllocator()->Reset();
+            commandList->Reset(dxCommandAllocator(), Q_NULLPTR);
 
-        transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-        green += 0.01f;
-        if (green > 1.0f)
-            green = 0.0f;
-        const float clearColor[] = { 0.0f, green, 0.0f, 1.0f };
-        commandList->ClearRenderTargetView(backBufferRenderTargetCPUHandle(), clearColor, 0, Q_NULLPTR);
+            green += 0.01f;
+            if (green > 1.0f)
+                green = 0.0f;
+            const float clearColor[] = { 0.0f, green, 0.0f, 1.0f };
+            commandList->ClearRenderTargetView(backBufferRenderTargetCPUHandle(), clearColor, 0, Q_NULLPTR);
 
-        transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        commandList->Close();
+            transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+            commandList->Close();
 
-        ID3D12CommandList *commandLists[] = { commandList.Get() };
-        commandQueue()->ExecuteCommandLists(_countof(commandLists), commandLists);
+            ID3D12CommandList *commandLists[] = { commandList.Get() };
+            dxCommandQueue()->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-        waitForGPU(f);
+            waitForGPU(f);
+        }
+    }
+
+    void releaseD3D() override
+    {
     }
 
     void afterPresent()
@@ -175,8 +184,8 @@ int main(int argc, char** argv) {
     // QLoggingCategory::setFilterRules(LOG_FILTER_RULES);
     
     QTestWindow window;
+    window.initialize();
     window.resize(1280, 720);
-    window.initializeD3D();
     window.showNormal();
 
     QTimer timer;

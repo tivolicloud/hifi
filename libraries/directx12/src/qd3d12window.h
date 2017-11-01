@@ -4,6 +4,7 @@
 #include <QPaintDeviceWindow>
 #include <QImage>
 #include <QMainWindow.h>
+#include <QCloseEvent>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -12,8 +13,6 @@
 #include <wrl/client.h>
 
 using namespace Microsoft::WRL;
-
-class QD3D12WindowPrivate;
 
 class QD3D12Window : public QWindow
 {
@@ -32,22 +31,26 @@ public:
 
     QD3D12Window(QWindow* parent = Q_NULLPTR);
 
-    void flush();
-
 
     bool event(QEvent* event) override;
     void setExtraRenderTargetCount(int count);
 
-    virtual void initializeD3D();
-    virtual void releaseD3D();
-    virtual void resizeD3D(const QSize &size);
-    virtual void paintD3D();
-    virtual void afterPresent();
+    virtual void initializeD3D() = 0;
+    virtual void releaseD3D() = 0;
+    virtual void resizeD3D(const QSize &size) = 0;
+    virtual void paintD3D() = 0;
+    virtual void afterPresent()  = 0;
 
-    ID3D12Device *device() const;
-    ID3D12CommandQueue *commandQueue() const;
-    ID3D12CommandAllocator *commandAllocator() const;
-    ID3D12CommandAllocator *bundleAllocator() const;
+    void flush();
+    void initialize();
+    void setupRenderTargets();
+    void handleResize();
+    void deviceLost();
+
+    ID3D12Device *dxDevice() const;
+    ID3D12CommandQueue *dxCommandQueue() const;
+    ID3D12CommandAllocator *dxCommandAllocator() const;
+    ID3D12CommandAllocator *dxBundleAllocator() const;
 
     Fence *createFence() const;
     void waitForGPU(Fence *f) const;
@@ -78,15 +81,31 @@ public:
 
     QImage readbackRGBA8888(ID3D12Resource *rt, D3D12_RESOURCE_STATES rtState, ID3D12GraphicsCommandList *commandList);
 
+    DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
+    ID3D12Resource *createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor, int samples);
+    ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
+
+
 signals:
     void HandleChanged(WId handle);
 
 protected:
 
-    // FIXME: paintevent
-    void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *) override;
 
-    QD3D12WindowPrivate* m_private;
+    bool initialized;
+    int swapChainBufferCount;
+    int extraRenderTargetCount;
+    ComPtr<ID3D12Device> m_device;
+    ComPtr<ID3D12CommandQueue> m_commandQueue;
+    ComPtr<IDXGISwapChain3> m_swapChain;
+    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+    ComPtr<ID3D12Resource> m_renderTargets[2];
+    ComPtr<ID3D12Resource> m_depthStencil;
+    UINT rtvStride;
+    UINT dsvStride;
+    ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+    ComPtr<ID3D12CommandAllocator> m_bundleAllocator;
 };
 
