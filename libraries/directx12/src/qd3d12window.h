@@ -19,12 +19,24 @@ class QD3D12Window : public QWindow
     Q_OBJECT
 
 public:
-    struct Fence {
-        Fence() : event(Q_NULLPTR) { }
-        ~Fence();
+    struct Fence 
+    {
+        Fence() : event(INVALID_HANDLE_VALUE) 
+        { 
+        }
+
+        ~Fence()
+        {
+            if (event != INVALID_HANDLE_VALUE)
+            {
+                CloseHandle(event);
+            }
+        }
+
         ComPtr<ID3D12Fence> fence;
-        HANDLE event;
-        QAtomicInt value;
+        HANDLE              event;
+        QAtomicInt          value;
+
     private:
         Q_DISABLE_COPY(Fence)
     };

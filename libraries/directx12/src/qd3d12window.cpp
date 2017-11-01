@@ -574,9 +574,3 @@ QImage QD3D12Window::readbackRGBA8888(ID3D12Resource *rt, D3D12_RESOURCE_STATES 
     return img;
 }
 
-QD3D12Window::Fence::~Fence()
-{
-    if (event)
-        CloseHandle(event);
-}
-
