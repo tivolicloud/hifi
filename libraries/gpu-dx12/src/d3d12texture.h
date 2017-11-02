@@ -11,18 +11,18 @@
 #include <QtCore/QThreadPool>
 #include <QtConcurrent>
 
-#include "GLShared.h"
-#include "GLBackend.h"
-#include "GLTexelFormat.h"
+#include "d3d12shared.h"
+#include "d3d12Backend.h"
+// #include "GLTexelFormat.h"
 #include <thread>
 
 #define THREADED_TEXTURE_BUFFERING 1
 
-namespace gpu { namespace gl {
+namespace gpu { namespace d3d12 {
 
-struct GLFilterMode {
-    GLint minFilter;
-    GLint magFilter;
+struct TextureFilterMode {
+    int minFilter;
+    int magFilter;
 };
 
 class GLVariableAllocationSupport {
