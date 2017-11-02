@@ -113,6 +113,9 @@ public:
             const float clearColor[] = { 0.0f, green, 0.0f, 1.0f };
             commandList->ClearRenderTargetView(backBufferRenderTargetCPUHandle(), clearColor, 0, Q_NULLPTR);
 
+            D3D12_PRIMITIVE_TOPOLOGY x;
+            commandList->IASetPrimitiveTopology(x);
+
             transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
             commandList->Close();
 
