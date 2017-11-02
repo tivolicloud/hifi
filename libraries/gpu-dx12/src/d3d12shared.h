@@ -123,28 +123,28 @@ namespace gpu
         bool checkGLError(const char* name = nullptr);
         bool checkGLErrorDebug(const char* name = nullptr);
 
-        class GLBackend;
+        class D3D12Backend;
 
         template <typename GPUType>
-        struct GLObject : public GPUObject {
+        struct DxObject : public GPUObject {
         public:
-            GLObject(const std::weak_ptr<GLBackend>& backend, const GPUType& gpuObject, unsigned int object_id) : _gpuObject(gpuObject), _id(object_id), _backend(backend) {}
+            DxObject(const std::weak_ptr<D3D12Backend>& backend, const GPUType& gpuObject, unsigned int object_id) : _gpuObject(gpuObject), _id(object_id), _backend(backend) {}
 
-            virtual ~GLObject() { }
+            virtual ~DxObject() { }
 
             const GPUType& _gpuObject;
             const unsigned int _id;
         protected:
-            const std::weak_ptr<GLBackend> _backend;
+            const std::weak_ptr<D3D12Backend> _backend;
         };
 
-        class GlBuffer;
-        class GLFramebuffer;
+        class d3d12Buffer;
+        class d3d12Framebuffer;
         class GLPipeline;
         class GLQuery;
         class GLState;
         class GLShader;
-        class GLTexture;
+        class d3d12Texture;
         struct ShaderObject;
 
     }

@@ -52,21 +52,22 @@
 #define GPU_STEREO_CAMERA_BUFFER
 #endif
 
-namespace gpu { namespace gl {
+namespace gpu { namespace d3d12 {
 
-class GLBackend : public Backend, public std::enable_shared_from_this<GLBackend> {
+class D3D12Backend : public Backend, public std::enable_shared_from_this<D3D12Backend> {
     // Context Backend static interface required
     friend class gpu::Context;
     static void init();
     static BackendPointer createBackend();
 
 protected:
-    explicit GLBackend(bool syncCache);
-    GLBackend();
+    explicit D3D12Backend(bool syncCache);
+    D3D12Backend();
+
 public:
     static bool makeProgram(Shader& shader, const Shader::BindingSet& slotBindings = Shader::BindingSet());
 
-    virtual ~GLBackend();
+    virtual ~D3D12Backend();
 
     void setCameraCorrection(const Mat4& correction);
     void render(const Batch& batch) final override;
@@ -196,24 +197,26 @@ public:
     virtual void do_setStateBlendFactor(const Batch& batch, size_t paramOffset) final;
     virtual void do_setStateScissorRect(const Batch& batch, size_t paramOffset) final;
 
-    virtual GLuint getFramebufferID(const FramebufferPointer& framebuffer) = 0;
-    virtual GLuint getTextureID(const TexturePointer& texture) final;
-    virtual GLuint getBufferID(const Buffer& buffer) = 0;
-    virtual GLuint getQueryID(const QueryPointer& query) = 0;
+    // TODO: Incompatible with D3D12. Either do an ID to handle mapping, or change the interface.
+    virtual unsigned int getFramebufferID(const FramebufferPointer& framebuffer) = 0;
+    virtual unsigned int getTextureID(const TexturePointer& texture) final;
+    virtual unsigned int getBufferID(const Buffer& buffer) = 0;
+    virtual unsigned int getQueryID(const QueryPointer& query) = 0;
 
-    virtual GLFramebuffer* syncGPUObject(const Framebuffer& framebuffer) = 0;
-    virtual GLBuffer* syncGPUObject(const Buffer& buffer) = 0;
-    virtual GLTexture* syncGPUObject(const TexturePointer& texture);
+    virtual d3d12Framebuffer* syncGPUObject(const Framebuffer& framebuffer) = 0;
+    virtual d3d12Buffer* syncGPUObject(const Buffer& buffer) = 0;
+    virtual d3d12Texture* syncGPUObject(const TexturePointer& texture);
     virtual GLQuery* syncGPUObject(const Query& query) = 0;
     //virtual bool isTextureReady(const TexturePointer& texture);
 
-    virtual void releaseBuffer(GLuint id, Size size) const;
-    virtual void releaseExternalTexture(GLuint id, const Texture::ExternalRecycler& recycler) const;
-    virtual void releaseTexture(GLuint id, Size size) const;
-    virtual void releaseFramebuffer(GLuint id) const;
-    virtual void releaseShader(GLuint id) const;
-    virtual void releaseProgram(GLuint id) const;
-    virtual void releaseQuery(GLuint id) const;
+    // TODO: use d3d handles, or do int mapping.
+    virtual void releaseBuffer(unsigned int id, Size size) const;
+    virtual void releaseExternalTexture(unsigned int id, const Texture::ExternalRecycler& recycler) const;
+    virtual void releaseTexture(unsigned int id, Size size) const;
+    virtual void releaseFramebuffer(unsigned int id) const;
+    virtual void releaseShader(unsigned int id) const;
+    virtual void releaseProgram(unsigned int id) const;
+    virtual void releaseQuery(unsigned int id) const;
     virtual void queueLambda(const std::function<void()> lambda) const;
 
     bool isTextureManagementSparseEnabled() const override { return (_textureManagement._sparseCapable && Texture::getEnableSparseTextures()); }
@@ -229,13 +232,13 @@ protected:
 
     std::list<std::string> profileRanges;
     mutable Mutex _trashMutex;
-    mutable std::list<std::pair<GLuint, Size>> _buffersTrash;
-    mutable std::list<std::pair<GLuint, Size>> _texturesTrash;
-    mutable std::list<std::pair<GLuint, Texture::ExternalRecycler>> _externalTexturesTrash;
-    mutable std::list<GLuint> _framebuffersTrash;
-    mutable std::list<GLuint> _shadersTrash;
-    mutable std::list<GLuint> _programsTrash;
-    mutable std::list<GLuint> _queriesTrash;
+    mutable std::list<std::pair<unsigned int, Size>> _buffersTrash;
+    mutable std::list<std::pair<unsigned int, Size>> _texturesTrash;
+    mutable std::list<std::pair<unsigned int, Texture::ExternalRecycler>> _externalTexturesTrash;
+    mutable std::list<unsigned int> _framebuffersTrash;
+    mutable std::list<unsigned int> _shadersTrash;
+    mutable std::list<unsigned int> _programsTrash;
+    mutable std::list<unsigned int> _queriesTrash;
     mutable std::list<std::function<void()>> _lambdaQueue;
 
     void renderPassTransfer(const Batch& batch);
@@ -267,7 +270,7 @@ protected:
         Buffers _buffers;
         Offsets _bufferOffsets;
         Offsets _bufferStrides;
-        std::vector<GLuint> _bufferVBOs;
+        std::vector<unsigned int> _bufferVBOs;
 
         glm::vec4 _colorAttribute{ 0.0f };
 
@@ -279,7 +282,7 @@ protected:
         Offset _indirectBufferOffset{ 0 };
         Offset _indirectBufferStride{ 0 };
 
-        GLuint _defaultVAO { 0 };
+        unsigned int _defaultVAO { 0 };
 
         InputStageState() :
             _invalidFormat(true),
@@ -326,12 +329,12 @@ protected:
         TransformCamera _camera;
         TransformCameras _cameras;
 
-        mutable std::map<std::string, GLvoid*> _drawCallInfoOffsets;
+        mutable std::map<std::string, void*> _drawCallInfoOffsets;
 
-        GLuint _objectBuffer { 0 };
-        GLuint _cameraBuffer { 0 };
-        GLuint _drawCallInfoBuffer { 0 };
-        GLuint _objectBufferTexture { 0 };
+        unsigned int _objectBuffer { 0 };
+        unsigned int _cameraBuffer { 0 };
+        unsigned int _drawCallInfoBuffer { 0 };
+        unsigned int _objectBufferTexture { 0 };
         size_t _cameraUboSize { 0 };
         bool _viewIsCamera{ false };
         bool _skybox { false };
@@ -400,8 +403,8 @@ protected:
     struct PipelineStageState {
         PipelinePointer _pipeline;
 
-        GLuint _program { 0 };
-        GLint _cameraCorrectionLocation { -1 };
+        unsigned int _program { 0 };
+        int _cameraCorrectionLocation { -1 };
         GLShader* _programShader { nullptr };
         bool _invalidProgram { false };
 
@@ -432,15 +435,15 @@ protected:
         uint16 _resource;
         ElementResource(Element&& elem, uint16 resource) : _element(elem), _resource(resource) {}
     };
-    ElementResource getFormatFromGLUniform(GLenum gltype);
-    static const GLint UNUSED_SLOT {-1};
-    static bool isUnusedSlot(GLint binding) { return (binding == UNUSED_SLOT); }
-    virtual int makeUniformSlots(GLuint glprogram, const Shader::BindingSet& slotBindings,
+    ElementResource getFormatFromGLUniform(DXGI_FORMAT type);
+    static const int UNUSED_SLOT {-1};
+    static bool isUnusedSlot(int binding) { return (binding == UNUSED_SLOT); }
+    virtual int makeUniformSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings,
         Shader::SlotSet& uniforms, Shader::SlotSet& textures, Shader::SlotSet& samplers);
-    virtual int makeUniformBlockSlots(GLuint glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& buffers);
-    virtual int makeResourceBufferSlots(GLuint glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& resourceBuffers) = 0;
-    virtual int makeInputSlots(GLuint glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& inputs);
-    virtual int makeOutputSlots(GLuint glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& outputs);
+    virtual int makeUniformBlockSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& buffers);
+    virtual int makeResourceBufferSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& resourceBuffers) = 0;
+    virtual int makeInputSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& inputs);
+    virtual int makeOutputSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& outputs);
 
 
     // Synchronize the state cache of this Backend with the actual real state of the GL Context
@@ -449,7 +452,7 @@ protected:
     
     struct OutputStageState {
         FramebufferPointer _framebuffer { nullptr };
-        GLuint _drawFBO { 0 };
+        unsigned int _drawFBO { 0 };
     } _output;
 
     void resetQueryStage();
@@ -464,7 +467,7 @@ protected:
     } _textureManagement;
     virtual void initTextureManagementStage() {}
 
-    typedef void (GLBackend::*CommandCall)(const Batch&, size_t);
+    typedef void (D3D12Backend::*CommandCall)(const Batch&, size_t);
     static CommandCall _commandCalls[Batch::NUM_COMMANDS];
     friend class GLState;
     friend class GLTexture;

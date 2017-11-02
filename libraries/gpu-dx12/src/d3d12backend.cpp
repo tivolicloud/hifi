@@ -29,28 +29,22 @@
 #include "d3d12shader.h"
 
 using namespace gpu;
+using namespace gpu::d3d12;
 
 static const QString DEBUG_FLAG("HIFI_DISABLE_OPENGL_45");
 static bool disableOpenGL45 = QProcessEnvironment::systemEnvironment().contains(DEBUG_FLAG);
 
-static GLBackend* INSTANCE{ nullptr };
+static D3D12Backend* INSTANCE{ nullptr };
 
-BackendPointer GLBackend::createBackend() {
+BackendPointer D3D12Backend::createBackend() {
     // The ATI memory info extension only exposes 'free memory' so we want to force it to 
     // cache the value as early as possible
     getDedicatedMemory();
 
     // FIXME provide a mechanism to override the backend for testing
     // Where the gpuContext is initialized and where the TRUE Backend is created and assigned
-    auto version = QOpenGLContextWrapper::currentContextVersion();
-    std::shared_ptr<GLBackend> result;
-    if (!disableOpenGL45 && version >= 0x0405) {
-        qCDebug(gpugllogging) << "Using OpenGL 4.5 backend";
-        result = std::make_shared<gpu::gl45::GL45Backend>();
-    } else {
-        qCDebug(gpugllogging) << "Using OpenGL 4.1 backend";
-        result = std::make_shared<gpu::gl41::GL41Backend>();
-    }
+    // TODO: Feature levels ? 
+    std::shared_ptr<D3D12Backend> result = std::make_shared<gpu::d3d12::D3D12Backend>();
     result->initInput();
     result->initTransform();
     result->initTextureManagementStage();
@@ -61,18 +55,20 @@ BackendPointer GLBackend::createBackend() {
     return result;
 }
 
-GLBackend& getBackend() {
+D3D12Backend& getBackend() {
     if (!INSTANCE) {
-        INSTANCE = static_cast<GLBackend*>(qApp->property(hifi::properties::gl::BACKEND).value<void*>());
+        INSTANCE = static_cast<D3D12Backend*>(qApp->property(hifi::properties::gl::BACKEND).value<void*>());
     }
     return *INSTANCE;
 }
 
-bool GLBackend::makeProgram(Shader& shader, const Shader::BindingSet& slotBindings) {
-    return GLShader::makeProgram(getBackend(), shader, slotBindings);
+bool D3D12Backend::makeProgram(Shader& shader, const Shader::BindingSet& slotBindings) {
+    // FIXME: implement this
+    // return GLShader::makeProgram(getBackend(), shader, slotBindings);
+    return false;
 }
 
-GLBackend::CommandCall GLBackend::_commandCalls[Batch::NUM_COMMANDS] = 
+D3D12Backend::CommandCall D3D12Backend::_commandCalls[Batch::NUM_COMMANDS] =
 {
     (&::gpu::gl::GLBackend::do_draw),
     (&::gpu::gl::GLBackend::do_drawIndexed),
@@ -185,18 +181,18 @@ void GLBackend::init() {
     });
 }
 
-GLBackend::GLBackend() {
+D3D12Backend::D3D12Backend() {
     _pipeline._cameraCorrectionBuffer._buffer->flush();
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &_uboAlignment);
 }
 
 
-GLBackend::~GLBackend() {
+D3D12Backend::~D3D12Backend() {
     killInput();
     killTransform();
 }
 
-void GLBackend::renderPassTransfer(const Batch& batch) {
+void D3D12Backend::renderPassTransfer(const Batch& batch) {
     const size_t numCommands = batch.getCommands().size();
     const Batch::Commands::value_type* command = batch.getCommands().data();
     const Batch::CommandOffsets::value_type* offset = batch.getCommandOffsets().data();
