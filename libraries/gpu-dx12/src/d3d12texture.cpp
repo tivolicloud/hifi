@@ -206,7 +206,7 @@ void TransferJob::startBufferingThread() {
 
 #endif
 
-TransferJob::TransferJob(const GLTexture& parent, uint16_t sourceMip, uint16_t targetMip, uint8_t face, uint32_t lines, uint32_t lineOffset)
+TransferJob::TransferJob(const D3D12Texture& parent, uint16_t sourceMip, uint16_t targetMip, uint8_t face, uint32_t lines, uint32_t lineOffset)
     : _parent(parent) {
 
 #if 0
@@ -256,7 +256,7 @@ TransferJob::TransferJob(const GLTexture& parent, uint16_t sourceMip, uint16_t t
 #endif
 }
 
-TransferJob::TransferJob(const GLTexture& parent, std::function<void()> transferLambda)
+TransferJob::TransferJob(const D3D12Texture& parent, std::function<void()> transferLambda)
     : _parent(parent), _bufferingRequired(false), _transferLambda(transferLambda) {
 }
 

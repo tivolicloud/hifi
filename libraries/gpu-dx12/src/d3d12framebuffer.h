@@ -16,7 +16,7 @@ namespace gpu { namespace d3d12 {
 class d3d12Framebuffer : public DxObject<Framebuffer> {
 public:
     template <typename d3d12FramebufferType>
-    static d3d12FramebufferType* sync(GLBackend& backend, const Framebuffer& framebuffer) {
+    static d3d12FramebufferType* sync(D3D12Backend& backend, const Framebuffer& framebuffer) {
         d3d12FramebufferType* object = Backend::getGPUObject<d3d12FramebufferType>(framebuffer);
 
         bool needsUpate { false };
@@ -47,7 +47,7 @@ public:
     }
 
     template <typename d3d12FramebufferType>
-    static GLuint getId(D3D12Backend& backend, const Framebuffer& framebuffer) {
+    static unsigned int getId(D3D12Backend& backend, const Framebuffer& framebuffer) {
         d3d12FramebufferType* fbo = sync<d3d12FramebufferType>(backend, framebuffer);
         if (fbo) {
             return fbo->_id;
@@ -65,7 +65,7 @@ protected:
     virtual void update() = 0;
     bool checkStatus() const;
 
-    d3d12Framebuffer(const std::weak_ptr<d3d12Backend>& backend, const Framebuffer& framebuffer, GLuint id) : DxObject(backend, framebuffer, id) {}
+    d3d12Framebuffer(const std::weak_ptr<D3D12Backend>& backend, const Framebuffer& framebuffer, unsigned int id) : DxObject(backend, framebuffer, id) {}
     ~d3d12Framebuffer();
 
 };

@@ -24,9 +24,8 @@
 
 // #include <gl/Config.h>
 
-// #include <gpu/Forward.h>
-// #include <gpu/Context.h>
-
+#include <gpu/Forward.h>
+#include <gpu/Context.h>
 #include "d3d12shared.h"
 
 
@@ -63,6 +62,11 @@ class D3D12Backend : public Backend, public std::enable_shared_from_this<D3D12Ba
 protected:
     explicit D3D12Backend(bool syncCache);
     D3D12Backend();
+
+    // TODO: Implement this properly.
+    const std::string DX12_VERSION = "DX12";
+    const std::string& getVersion() const override { return DX12_VERSION; }
+
 
 public:
     static bool makeProgram(Shader& shader, const Shader::BindingSet& slotBindings = Shader::BindingSet());
@@ -131,7 +135,7 @@ public:
     // Pipeline Stage
     virtual void do_setPipeline(const Batch& batch, size_t paramOffset) final;
 
-    // Output stage
+    // Output stage 2
     virtual void do_setFramebuffer(const Batch& batch, size_t paramOffset) final;
     virtual void do_clearFramebuffer(const Batch& batch, size_t paramOffset) final;
     virtual void do_blit(const Batch& batch, size_t paramOffset) = 0;
@@ -205,7 +209,7 @@ public:
 
     virtual d3d12Framebuffer* syncGPUObject(const Framebuffer& framebuffer) = 0;
     virtual d3d12Buffer* syncGPUObject(const Buffer& buffer) = 0;
-    virtual d3d12Texture* syncGPUObject(const TexturePointer& texture);
+    virtual D3D12Texture* syncGPUObject(const TexturePointer& texture);
     virtual GLQuery* syncGPUObject(const Query& query) = 0;
     //virtual bool isTextureReady(const TexturePointer& texture);
 
@@ -405,7 +409,7 @@ protected:
 
         unsigned int _program { 0 };
         int _cameraCorrectionLocation { -1 };
-        GLShader* _programShader { nullptr };
+        D3DShader* _programShader { nullptr };
         bool _invalidProgram { false };
 
         BufferView _cameraCorrectionBuffer { gpu::BufferView(std::make_shared<gpu::Buffer>(sizeof(CameraCorrection), nullptr )) };
@@ -425,8 +429,8 @@ protected:
     } _pipeline;
 
     // Backend dependant compilation of the shader
-    virtual GLShader* compileBackendProgram(const Shader& program);
-    virtual GLShader* compileBackendShader(const Shader& shader);
+    virtual D3DShader* compileBackendProgram(const Shader& program);
+    virtual D3DShader* compileBackendShader(const Shader& shader);
     virtual std::string getBackendShaderHeader() const;
     virtual void makeProgramBindings(ShaderObject& shaderObject);
     class ElementResource {
@@ -470,8 +474,8 @@ protected:
     typedef void (D3D12Backend::*CommandCall)(const Batch&, size_t);
     static CommandCall _commandCalls[Batch::NUM_COMMANDS];
     friend class GLState;
-    friend class GLTexture;
-    friend class GLShader;
+    friend class D3D12Texture;
+    friend class D3DShader;
 };
 
 } }

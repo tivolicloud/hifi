@@ -44,7 +44,7 @@ public:
     class TransferJob {
         using VoidLambda = std::function<void()>;
         using VoidLambdaQueue = std::queue<VoidLambda>;
-        const GLTexture& _parent;
+        const D3D12Texture& _parent;
         Texture::PixelsPointer _mipData;
         size_t _transferOffset { 0 };
         size_t _transferSize { 0 };
@@ -61,8 +61,8 @@ public:
 
     public:
         TransferJob(const TransferJob& other) = delete;
-        TransferJob(const GLTexture& parent, std::function<void()> transferLambda);
-        TransferJob(const GLTexture& parent, uint16_t sourceMip, uint16_t targetMip, uint8_t face, uint32_t lines = 0, uint32_t lineOffset = 0);
+        TransferJob(const D3D12Texture& parent, std::function<void()> transferLambda);
+        TransferJob(const D3D12Texture& parent, uint16_t sourceMip, uint16_t targetMip, uint8_t face, uint32_t lines = 0, uint32_t lineOffset = 0);
         ~TransferJob();
         bool tryTransfer();
 

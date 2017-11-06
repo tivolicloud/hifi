@@ -6,13 +6,13 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-#include "d3dframebuffer.h"
+#include "d3d12framebuffer.h"
 #include "d3d12Backend.h"
 
 using namespace gpu;
 using namespace gpu::d3d12;
 
-GLFramebuffer::~GLFramebuffer() { 
+d3d12Framebuffer::~d3d12Framebuffer() {
     if (_id) {
         auto backend = _backend.lock();
         if (backend) {
@@ -21,27 +21,7 @@ GLFramebuffer::~GLFramebuffer() {
     } 
 }
 
-bool GLFramebuffer::checkStatus() const {
-    switch (_status) {
-    case GL_FRAMEBUFFER_COMPLETE:
-        // Success !
-        return true;
-
-    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-        qCWarning(gpugllogging) << "GLFramebuffer::syncGPUObject : Framebuffer not valid, GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT.";
-        break;
-    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        qCWarning(gpugllogging) << "GLFramebuffer::syncGPUObject : Framebuffer not valid, GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT.";
-        break;
-    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-        qCWarning(gpugllogging) << "GLFramebuffer::syncGPUObject : Framebuffer not valid, GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER.";
-        break;
-    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-        qCWarning(gpugllogging) << "GLFramebuffer::syncGPUObject : Framebuffer not valid, GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER.";
-        break;
-    case GL_FRAMEBUFFER_UNSUPPORTED:
-        qCWarning(gpugllogging) << "GLFramebuffer::syncGPUObject : Framebuffer not valid, GL_FRAMEBUFFER_UNSUPPORTED.";
-        break;
-    }
+bool d3d12Framebuffer::checkStatus() const {
+    // TODO: Implement transitions
     return false;
 }

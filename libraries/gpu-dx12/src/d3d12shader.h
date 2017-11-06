@@ -8,21 +8,19 @@
 #ifndef hifi_gpu_gl_GLShader_h
 #define hifi_gpu_gl_GLShader_h
 
-#include "GLShared.h"
+#include "d3d12shared.h"
 
-namespace gpu { namespace gl {
+namespace gpu { namespace d3d12 {
 
 struct ShaderObject {
-    GLuint glshader { 0 };
-    GLuint glprogram { 0 };
-    GLint transformCameraSlot { -1 };
-    GLint transformObjectSlot { -1 };
+    int transformCameraSlot { -1 };
+    int transformObjectSlot { -1 };
 };
 
-class GLShader : public GPUObject {
+class D3DShader : public GPUObject {
 public:
-    static GLShader* sync(GLBackend& backend, const Shader& shader);
-    static bool makeProgram(GLBackend& backend, Shader& shader, const Shader::BindingSet& slotBindings);
+    static D3DShader* sync(D3D12Backend& backend, const Shader& shader);
+    static bool makeProgram(D3D12Backend& backend, Shader& shader, const Shader::BindingSet& slotBindings);
 
     enum Version {
         Mono = 0,
@@ -31,23 +29,25 @@ public:
         NumVersions
     };
 
-    using ShaderObject = gpu::gl::ShaderObject;
-    using ShaderObjects = std::array< ShaderObject, NumVersions >;
+    // using ShaderObject = gpu::gl::ShaderObject;
+    // using ShaderObjects = std::array< ShaderObject, NumVersions >;
 
-    using UniformMapping = std::map<GLint, GLint>;
+    using UniformMapping = std::map<int, int>;
     using UniformMappingVersions = std::vector<UniformMapping>;
 
-    GLShader(const std::weak_ptr<GLBackend>& backend);
-    ~GLShader();
+    D3DShader(const std::weak_ptr<D3D12Backend>& backend);
+    ~D3DShader();
 
-    ShaderObjects _shaderObjects;
+    // ShaderObjects _shaderObjects;
     UniformMappingVersions _uniformMappings;
 
-    GLuint getProgram(Version version = Mono) const {
+#if 0
+    unsigned int getProgram(Version version = Mono) const {
         return _shaderObjects[version].glprogram;
     }
+#endif
 
-    GLint getUniformLocation(GLint srcLoc, Version version = Mono) const {
+    unsigned int getUniformLocation(int srcLoc, Version version = Mono) const {
         // This check protect against potential invalid src location for this shader, if unknown then return -1.
         const auto& mapping = _uniformMappings[version];
         auto found = mapping.find(srcLoc);
@@ -57,7 +57,7 @@ public:
         return found->second;
     }
 
-    const std::weak_ptr<GLBackend> _backend;
+    const std::weak_ptr<D3D12Backend> _backend;
 };
 
 } }

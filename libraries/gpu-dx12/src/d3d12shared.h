@@ -143,8 +143,8 @@ namespace gpu
         class GLPipeline;
         class GLQuery;
         class GLState;
-        class GLShader;
-        class d3d12Texture;
+        class D3DShader;
+        class D3D12Texture;
         struct ShaderObject;
 
     }
