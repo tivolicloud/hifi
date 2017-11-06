@@ -8,12 +8,12 @@
 #ifndef hifi_gpu_gl_GLBuffer_h
 #define hifi_gpu_gl_GLBuffer_h
 
-#include "GLShared.h"
-#include "GLBackend.h"
+#include "d3d12shared.h"
+#include "d3d12backend.h"
 
-namespace gpu { namespace gl {
+namespace gpu { namespace d3d12 {
 
-class GLBuffer : public GLObject<Buffer> {
+class D3DBuffer : public DxObject<Buffer> {
 public:
     template <typename GLBufferType>
     static GLBufferType* sync(GLBackend& backend, const Buffer& buffer) {
@@ -49,8 +49,8 @@ public:
         }
     }
 
-    const GLuint& _buffer { _id };
-    const GLuint _size;
+    const unsigned int& _buffer { _id };
+    const unsigned int  _size;
     const Stamp _stamp;
 
     ~GLBuffer();
@@ -58,7 +58,7 @@ public:
     virtual void transfer() = 0;
 
 protected:
-    GLBuffer(const std::weak_ptr<GLBackend>& backend, const Buffer& buffer, GLuint id);
+    D3DBuffer(const std::weak_ptr<D3D12Backend>& backend, const Buffer& buffer, unsigned int id);
 };
 
 } }

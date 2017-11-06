@@ -6,48 +6,49 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-#include "GLTexture.h"
 
 #include <QtCore/QThread>
 #include <NumericalConstants.h>
 
-#include "GLBackend.h"
+#include "d3d12texture.h"
+#include "d3d12backend.h"
 
 using namespace gpu;
-using namespace gpu::gl;
+using namespace gpu::d3d12;
 
-
+#if 0
 const GLenum GLTexture::CUBE_FACE_LAYOUT[GLTexture::TEXTURE_CUBE_NUM_FACES] = {
     GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
     GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
     GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 };
+#endif
 
-const GLenum GLTexture::WRAP_MODES[Sampler::NUM_WRAP_MODES] = {
-    GL_REPEAT,                         // WRAP_REPEAT,
-    GL_MIRRORED_REPEAT,                // WRAP_MIRROR,
-    GL_CLAMP_TO_EDGE,                  // WRAP_CLAMP,
-    GL_CLAMP_TO_BORDER,                // WRAP_BORDER,
-    GL_MIRROR_CLAMP_TO_EDGE_EXT        // WRAP_MIRROR_ONCE,
+const D3D12_TEXTURE_ADDRESS_MODE D3D12Texture::WRAP_MODES[Sampler::NUM_WRAP_MODES] = {
+    D3D12_TEXTURE_ADDRESS_MODE_WRAP,            // WRAP_REPEAT,
+    D3D12_TEXTURE_ADDRESS_MODE_MIRROR,          // WRAP_MIRROR,
+    D3D12_TEXTURE_ADDRESS_MODE_CLAMP,           // WRAP_CLAMP,
+    D3D12_TEXTURE_ADDRESS_MODE_BORDER,          // WRAP_BORDER,
+    D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE      // WRAP_MIRROR_ONCE,
 };     
 
-const GLFilterMode GLTexture::FILTER_MODES[Sampler::NUM_FILTERS] = {
-    { GL_NEAREST, GL_NEAREST },  //FILTER_MIN_MAG_POINT,
-    { GL_NEAREST, GL_LINEAR },  //FILTER_MIN_POINT_MAG_LINEAR,
-    { GL_LINEAR, GL_NEAREST },  //FILTER_MIN_LINEAR_MAG_POINT,
-    { GL_LINEAR, GL_LINEAR },  //FILTER_MIN_MAG_LINEAR,
+const D3D12_FILTER D3D12Texture::FILTER_MODES[Sampler::NUM_FILTERS] = {
+    D3D12_FILTER_MIN_MAG_MIP_POINT,
+    D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
+    D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
 
-    { GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST },  //FILTER_MIN_MAG_MIP_POINT,
-    { GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST },  //FILTER_MIN_MAG_POINT_MIP_LINEAR,
-    { GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR },  //FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
-    { GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR },  //FILTER_MIN_POINT_MAG_MIP_LINEAR,
-    { GL_LINEAR_MIPMAP_NEAREST, GL_NEAREST },  //FILTER_MIN_LINEAR_MAG_MIP_POINT,
-    { GL_LINEAR_MIPMAP_LINEAR, GL_NEAREST },  //FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
-    { GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR },  //FILTER_MIN_MAG_LINEAR_MIP_POINT,
-    { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR },  //FILTER_MIN_MAG_MIP_LINEAR,
-    { GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR }  //FILTER_ANISOTROPIC,
+    D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+    D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
+    D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
+    D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR,
+    D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+    D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+    D3D12_FILTER_MIN_MAG_MIP_LINEAR
 };
 
+#if 0
 GLenum GLTexture::getGLTextureType(const Texture& texture) {
     switch (texture.getType()) {
     case Texture::TEX_2D:
@@ -64,9 +65,12 @@ GLenum GLTexture::getGLTextureType(const Texture& texture) {
     Q_UNREACHABLE();
     return GL_TEXTURE_2D;
 }
+#endif
 
-
-uint8_t GLTexture::getFaceCount(GLenum target) {
+#if 0
+uint8_t D3D12Texture::getFaceCount(int target)
+{
+    // TODO: Fixme.
     switch (target) {
         case GL_TEXTURE_2D:
             return TEXTURE_2D_NUM_FACES;
@@ -77,8 +81,13 @@ uint8_t GLTexture::getFaceCount(GLenum target) {
             break;
     }
 }
-const std::vector<GLenum>& GLTexture::getFaceTargets(GLenum target) {
-    static std::vector<GLenum> cubeFaceTargets {
+#endif
+
+#if 0
+const std::vector<unsigned int>& D3D12Texture::getFaceTargets(GLenum target)
+{
+    // TODO: Fix me. 
+    static std::vector<GLenum> cubeFaceTargets; {
         GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
@@ -98,24 +107,26 @@ const std::vector<GLenum>& GLTexture::getFaceTargets(GLenum target) {
     Q_UNREACHABLE();
     return faceTargets;
 }
+#endif
 
-GLTexture::GLTexture(const std::weak_ptr<GLBackend>& backend, const Texture& texture, GLuint id) :
-    GLObject(backend, texture, id),
-    _source(texture.source()),
-    _target(getGLTextureType(texture)),
-    _texelFormat(GLTexelFormat::evalGLTexelFormatInternal(texture.getTexelFormat()))
+D3D12Texture::D3D12Texture(const std::weak_ptr<D3D12Backend>& backend, const Texture& texture, unsigned int id) :
+    DxObject(backend, texture, id),
+    _source(texture.source())
+   //  _target(getGLTextureType(texture)),
+   // _texelFormat(GLTexelFormat::evalGLTexelFormatInternal(texture.getTexelFormat()))
 {
     Backend::setGPUObject(texture, this);
 }
 
-GLTexture::~GLTexture() {
+D3D12Texture::~D3D12Texture() {
     auto backend = _backend.lock();
     if (backend && _id) {
         backend->releaseTexture(_id, 0);
     }
 }
 
-Size GLTexture::copyMipFaceFromTexture(uint16_t sourceMip, uint16_t targetMip, uint8_t face) const {
+#if 0
+Size D3D12Texture::copyMipFaceFromTexture(uint16_t sourceMip, uint16_t targetMip, uint8_t face) const {
     if (!_gpuObject.isStoredMipFaceAvailable(sourceMip)) {
         return 0;
     }
@@ -130,14 +141,15 @@ Size GLTexture::copyMipFaceFromTexture(uint16_t sourceMip, uint16_t targetMip, u
     }
     return 0;
 }
+#endif
 
-
-GLExternalTexture::GLExternalTexture(const std::weak_ptr<GLBackend>& backend, const Texture& texture, GLuint id) 
+D3D12ExternalTexture::D3D12ExternalTexture(const std::weak_ptr<D3D12Backend>& backend, const Texture& texture, unsigned int id)
     : Parent(backend, texture, id) {
     Backend::textureExternalCount.increment();
 }
 
-GLExternalTexture::~GLExternalTexture() {
+D3D12ExternalTexture::~D3D12ExternalTexture() {
+#if 0
     auto backend = _backend.lock();
     if (backend) {
         auto recycler = _gpuObject.getExternalRecycler();
@@ -149,6 +161,7 @@ GLExternalTexture::~GLExternalTexture() {
         const_cast<GLuint&>(_id) = 0;
     }
     Backend::textureExternalCount.decrement();
+#endif
 }
 
 
@@ -196,6 +209,7 @@ void TransferJob::startBufferingThread() {
 TransferJob::TransferJob(const GLTexture& parent, uint16_t sourceMip, uint16_t targetMip, uint8_t face, uint32_t lines, uint32_t lineOffset)
     : _parent(parent) {
 
+#if 0
     auto transferDimensions = _parent._gpuObject.evalMipDimensions(sourceMip);
     GLenum format;
     GLenum internalFormat;
@@ -239,6 +253,7 @@ TransferJob::TransferJob(const GLTexture& parent, uint16_t sourceMip, uint16_t t
             qCWarning(gpugllogging) << "Transfer failed because mip could not be retrieved from texture " << _parent._source.c_str();
         }
     };
+#endif
 }
 
 TransferJob::TransferJob(const GLTexture& parent, std::function<void()> transferLambda)
@@ -322,7 +337,7 @@ void GLVariableAllocationSupport::addMemoryManagedTexture(const TexturePointer& 
 }
 
 void GLVariableAllocationSupport::addToWorkQueue(const TexturePointer& texturePointer) {
-    GLTexture* gltexture = Backend::getGPUObject<GLTexture>(*texturePointer);
+    D3D12Texture* gltexture = Backend::getGPUObject<D3D12Texture>(*texturePointer);
     GLVariableAllocationSupport* vargltexture = dynamic_cast<GLVariableAllocationSupport*>(gltexture);
     switch (_memoryPressureState) {
         case MemoryPressureState::Oversubscribed:
@@ -436,7 +451,7 @@ void GLVariableAllocationSupport::updateMemoryPressure() {
         if (!texture) {
             continue;
         }
-        GLTexture* gltexture = Backend::getGPUObject<GLTexture>(*texture);
+        D3D12Texture* gltexture = Backend::getGPUObject<D3D12Texture>(*texture);
         GLVariableAllocationSupport* vartexture = dynamic_cast<GLVariableAllocationSupport*>(gltexture);
         // Track how much the texture thinks it should be using
         idealMemoryAllocation += texture->evalTotalSize();
@@ -490,7 +505,7 @@ TexturePointer GLVariableAllocationSupport::getNextWorkQueueItem(WorkQueue& work
         }
 
         // Check whether the resulting texture can actually have work performed
-        GLTexture* gltexture = Backend::getGPUObject<GLTexture>(*texture);
+        D3D12Texture* gltexture = Backend::getGPUObject<D3D12Texture>(*texture);
         GLVariableAllocationSupport* vartexture = dynamic_cast<GLVariableAllocationSupport*>(gltexture);
         switch (_memoryPressureState) {
             case MemoryPressureState::Oversubscribed:
@@ -538,7 +553,7 @@ void GLVariableAllocationSupport::processWorkQueue(WorkQueue& workQueue) {
     // Grab the first item off the demote queue
     PROFILE_RANGE(render_gpu_gl, __FUNCTION__);
 
-    GLTexture* gltexture = Backend::getGPUObject<GLTexture>(*texture);
+    D3D12Texture* gltexture = Backend::getGPUObject<D3D12Texture>(*texture);
     GLVariableAllocationSupport* vartexture = dynamic_cast<GLVariableAllocationSupport*>(gltexture);
     switch (_memoryPressureState) {
         case MemoryPressureState::Oversubscribed:
@@ -564,7 +579,7 @@ void GLVariableAllocationSupport::processWorkQueue(WorkQueue& workQueue) {
                 // Eagerly start the next buffering job if possible
                 texture = getNextWorkQueueItem(workQueue);
                 if (texture) {
-                    gltexture = Backend::getGPUObject<GLTexture>(*texture);
+                    gltexture = Backend::getGPUObject<D3D12Texture>(*texture);
                     vartexture = dynamic_cast<GLVariableAllocationSupport*>(gltexture);
                     vartexture->executeNextBuffer(texture);
                 }
