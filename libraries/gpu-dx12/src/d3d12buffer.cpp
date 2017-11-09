@@ -6,13 +6,13 @@
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-#include "GLBuffer.h"
-#include "GLBackend.h"
+#include "d3d12buffer.h"
+#include "d3d12backend.h"
 
 using namespace gpu;
-using namespace gpu::gl;
+using namespace gpu::d3d12;
 
-GLBuffer::~GLBuffer() {
+D3DBuffer::~D3DBuffer() {
     Backend::bufferCount.decrement();
     Backend::bufferGPUMemSize.update(_size, 0);
 
@@ -24,9 +24,9 @@ GLBuffer::~GLBuffer() {
     }
 }
 
-GLBuffer::GLBuffer(const std::weak_ptr<GLBackend>& backend, const Buffer& buffer, GLuint id) :
-    GLObject(backend, buffer, id),
-    _size((GLuint)buffer._renderSysmem.getSize()),
+D3DBuffer::D3DBuffer(const std::weak_ptr<D3D12Backend>& backend, const Buffer& buffer, unsigned int id) :
+    DxObject(backend, buffer, id),
+    _size((unsigned int)buffer._renderSysmem.getSize()),
     _stamp(buffer._renderSysmem.getStamp())
 {
     Backend::bufferCount.increment();

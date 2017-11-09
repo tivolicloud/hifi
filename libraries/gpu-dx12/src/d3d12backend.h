@@ -59,7 +59,7 @@ class D3D12Backend : public Backend, public std::enable_shared_from_this<D3D12Ba
     static void init();
     static BackendPointer createBackend();
 
-protected:
+public:
     explicit D3D12Backend(bool syncCache);
     D3D12Backend();
 
@@ -104,12 +104,12 @@ public:
     size_t getMaxNumResourceTextures() const { return MAX_NUM_RESOURCE_TEXTURES; }
 
     // Draw Stage
-    virtual void do_draw(const Batch& batch, size_t paramOffset) = 0;
-    virtual void do_drawIndexed(const Batch& batch, size_t paramOffset) = 0;
-    virtual void do_drawInstanced(const Batch& batch, size_t paramOffset) = 0;
-    virtual void do_drawIndexedInstanced(const Batch& batch, size_t paramOffset) = 0;
-    virtual void do_multiDrawIndirect(const Batch& batch, size_t paramOffset) = 0;
-    virtual void do_multiDrawIndexedIndirect(const Batch& batch, size_t paramOffset) = 0;
+    virtual void do_draw(const Batch& batch, size_t paramOffset);
+    virtual void do_drawIndexed(const Batch& batch, size_t paramOffset);
+    virtual void do_drawInstanced(const Batch& batch, size_t paramOffset);
+    virtual void do_drawIndexedInstanced(const Batch& batch, size_t paramOffset);
+    virtual void do_multiDrawIndirect(const Batch& batch, size_t paramOffset);
+    virtual void do_multiDrawIndexedIndirect(const Batch& batch, size_t paramOffset);
 
     // Input Stage
     virtual void do_setInputFormat(const Batch& batch, size_t paramOffset) final;
@@ -138,7 +138,7 @@ public:
     // Output stage 2
     virtual void do_setFramebuffer(const Batch& batch, size_t paramOffset) final;
     virtual void do_clearFramebuffer(const Batch& batch, size_t paramOffset) final;
-    virtual void do_blit(const Batch& batch, size_t paramOffset) = 0;
+    virtual void do_blit(const Batch& batch, size_t paramOffset);
 
     // Query section
     virtual void do_beginQuery(const Batch& batch, size_t paramOffset) final;
@@ -161,13 +161,13 @@ public:
     virtual void do_stopNamedCall(const Batch& batch, size_t paramOffset) final;
 
     static const int MAX_NUM_ATTRIBUTES = Stream::NUM_INPUT_SLOTS;
-    // The drawcall Info attribute  channel is reserved and is the upper bound for the number of availables Input buffers
+    // The drawcall Info attribute  channel is reserved and is the upper bound for the number of available Input buffers
     static const int MAX_NUM_INPUT_BUFFERS = Stream::DRAW_CALL_INFO;
 
     virtual void do_pushProfileRange(const Batch& batch, size_t paramOffset) final;
     virtual void do_popProfileRange(const Batch& batch, size_t paramOffset) final;
 
-    // TODO: As long as we have gl calls explicitely issued from interface
+    // TODO: As long as we have gl calls explicitly issued from interface
     // code, we need to be able to record and batch these calls. THe long 
     // term strategy is to get rid of any GL calls in favor of the HIFI GPU API
     virtual void do_glUniform1i(const Batch& batch, size_t paramOffset) final;
@@ -202,15 +202,46 @@ public:
     virtual void do_setStateScissorRect(const Batch& batch, size_t paramOffset) final;
 
     // TODO: Incompatible with D3D12. Either do an ID to handle mapping, or change the interface.
-    virtual unsigned int getFramebufferID(const FramebufferPointer& framebuffer) = 0;
-    virtual unsigned int getTextureID(const TexturePointer& texture) final;
-    virtual unsigned int getBufferID(const Buffer& buffer) = 0;
-    virtual unsigned int getQueryID(const QueryPointer& query) = 0;
+    virtual unsigned int getFramebufferID(const FramebufferPointer& framebuffer)
+    {
+        return 0;
+    }
 
-    virtual d3d12Framebuffer* syncGPUObject(const Framebuffer& framebuffer) = 0;
-    virtual d3d12Buffer* syncGPUObject(const Buffer& buffer) = 0;
-    virtual D3D12Texture* syncGPUObject(const TexturePointer& texture);
-    virtual GLQuery* syncGPUObject(const Query& query) = 0;
+    virtual unsigned int getTextureID(const TexturePointer& texture) final
+    {
+        return 0;
+    }
+
+    virtual unsigned int getBufferID(const Buffer& buffer)
+    {
+        return 0;
+    }
+
+    virtual unsigned int getQueryID(const QueryPointer& query)
+    {
+        return 0;
+    }
+
+    virtual d3d12Framebuffer* syncGPUObject(const Framebuffer& framebuffer)
+    {
+        return nullptr;
+    }
+
+    virtual d3d12Buffer* syncGPUObject(const Buffer& buffer)
+    {
+        return nullptr;
+    }
+
+    virtual D3D12Texture* syncGPUObject(const TexturePointer& texture)
+    {
+        return nullptr;
+    }
+
+    virtual GLQuery* syncGPUObject(const Query& query)
+    {
+        return nullptr;
+    }
+
     //virtual bool isTextureReady(const TexturePointer& texture);
 
     // TODO: use d3d handles, or do int mapping.
@@ -256,7 +287,10 @@ protected:
     virtual void killInput() final;
     virtual void syncInputStateCache() final;
     virtual void resetInputStage();
-    virtual void updateInput() = 0;
+    
+    virtual void updateInput()
+    {
+    }
 
     struct InputStageState {
         bool _invalidFormat { true };
@@ -299,11 +333,18 @@ protected:
             _bufferVBOs(_invalidBuffers.size(), 0) {}
     } _input;
 
-    virtual void initTransform() = 0;
+    virtual void initTransform()
+    {
+    }
+
     void killTransform();
     // Synchronize the state cache of this Backend with the actual real state of the GL Context
     void syncTransformStateCache();
-    virtual void updateTransform(const Batch& batch) = 0;
+   
+    virtual void updateTransform(const Batch& batch)
+    {
+    }
+
     virtual void resetTransformStage();
 
     // Allows for correction of the camera pose to account for changes
@@ -367,7 +408,9 @@ protected:
         void bindCurrentCamera(int stereoSide) const;
     } _transform;
 
-    virtual void transferTransformState(const Batch& batch) const = 0;
+    virtual void transferTransformState(const Batch& batch) const
+    {
+    }
 
     struct UniformStageState {
         std::array<BufferPointer, MAX_NUM_UNIFORM_BUFFERS> _buffers;
@@ -379,8 +422,14 @@ protected:
 
     // update resource cache and do the gl bind/unbind call with the current gpu::Buffer cached at slot s
     // This is using different gl object  depending on the gl version
-    virtual bool bindResourceBuffer(uint32_t slot, BufferPointer& buffer) = 0;
-    virtual void releaseResourceBuffer(uint32_t slot) = 0;
+    virtual bool bindResourceBuffer(uint32_t slot, BufferPointer& buffer)
+    {
+        return false;
+    }
+
+    virtual void releaseResourceBuffer(uint32_t slot)
+    {
+    }
 
     // update resource cache and do the gl unbind call with the current gpu::Texture cached at slot s
     void releaseResourceTexture(uint32_t slot);
@@ -445,7 +494,12 @@ protected:
     virtual int makeUniformSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings,
         Shader::SlotSet& uniforms, Shader::SlotSet& textures, Shader::SlotSet& samplers);
     virtual int makeUniformBlockSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& buffers);
-    virtual int makeResourceBufferSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& resourceBuffers) = 0;
+    
+    virtual int makeResourceBufferSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& resourceBuffers)
+    {
+        return 0;
+    }
+    
     virtual int makeInputSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& inputs);
     virtual int makeOutputSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& outputs);
 

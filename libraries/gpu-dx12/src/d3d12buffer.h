@@ -16,7 +16,7 @@ namespace gpu { namespace d3d12 {
 class D3DBuffer : public DxObject<Buffer> {
 public:
     template <typename GLBufferType>
-    static GLBufferType* sync(GLBackend& backend, const Buffer& buffer) {
+    static GLBufferType* sync(D3D12Backend& backend, const Buffer& buffer) {
         if (buffer.getSysmem().getSize() != 0) {
             if (buffer._getUpdateCount == 0) {
                 qWarning() << "Unsynced buffer";
@@ -40,7 +40,7 @@ public:
     }
 
     template <typename GLBufferType>
-    static GLuint getId(GLBackend& backend, const Buffer& buffer) {
+    static unsigned int getId(D3D12Backend& backend, const Buffer& buffer) {
         GLBuffer* bo = sync<GLBufferType>(backend, buffer);
         if (bo) {
             return bo->_buffer;
@@ -53,7 +53,7 @@ public:
     const unsigned int  _size;
     const Stamp _stamp;
 
-    ~GLBuffer();
+    ~D3DBuffer();
 
     virtual void transfer() = 0;
 

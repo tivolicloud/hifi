@@ -34,7 +34,7 @@ using namespace gpu::d3d12;
 static const QString DEBUG_FLAG("HIFI_DISABLE_OPENGL_45");
 static bool disableOpenGL45 = QProcessEnvironment::systemEnvironment().contains(DEBUG_FLAG);
 
-static D3D12Backend* INSTANCE{ nullptr };
+static D3D12Backend* INSTANCE { nullptr };
 
 BackendPointer D3D12Backend::createBackend() {
     // The ATI memory info extension only exposes 'free memory' so we want to force it to 
@@ -159,9 +159,12 @@ void D3D12Backend::init() {
     });
 }
 
-D3D12Backend::D3D12Backend() {
-    _pipeline._cameraCorrectionBuffer._buffer->flush();
+D3D12Backend::D3D12Backend(bool syncCache) {
+    // TODO: Fixme _pipeline._cameraCorrectionBuffer._buffer->flush();
     // glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &_uboAlignment);
+}
+
+D3D12Backend::D3D12Backend() {
 }
 
 
@@ -815,4 +818,32 @@ void D3D12Backend::setCameraCorrection(const Mat4& correction) {
     _transform._correction.correctionInverse = glm::inverse(correction);
     _pipeline._cameraCorrectionBuffer._buffer->setSubData(0, _transform._correction);
     _pipeline._cameraCorrectionBuffer._buffer->flush();
+}
+
+void D3D12Backend::do_draw(const Batch& batch, size_t paramOffset) 
+{
+}
+
+void D3D12Backend::do_drawIndexed(const Batch& batch, size_t paramOffset)
+{
+}
+
+void D3D12Backend::do_drawInstanced(const Batch& batch, size_t paramOffset)
+{
+}
+
+void D3D12Backend::do_drawIndexedInstanced(const Batch& batch, size_t paramOffset)
+{
+}
+
+void D3D12Backend::do_multiDrawIndirect(const Batch& batch, size_t paramOffset)
+{
+}
+
+void D3D12Backend::do_multiDrawIndexedIndirect(const Batch& batch, size_t paramOffset)
+{
+}
+
+void D3D12Backend::do_blit(const Batch& batch, size_t paramOffset)
+{
 }
