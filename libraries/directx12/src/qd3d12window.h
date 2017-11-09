@@ -79,13 +79,8 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE extraRenderTargetCPUHandle(int idx) const;
     D3D12_CPU_DESCRIPTOR_HANDLE extraDepthStencilCPUHandle(int idx) const;
 
-    ID3D12Resource *createExtraRenderTargetAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
-                                                   const QSize &size,
-                                                   const float *clearColor = Q_NULLPTR,
-                                                   int samples = 0);
-    ID3D12Resource *createExtraDepthStencilAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
-                                                   const QSize &size,
-                                                   int samples = 0);
+    Microsoft::WRL::ComPtr<ID3D12Resource> createExtraRenderTargetAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor = Q_NULLPTR, int samples = 0);
+    Microsoft::WRL::ComPtr<ID3D12Resource> createExtraDepthStencilAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples = 0);
 
     quint32 alignedCBSize(quint32 size) const;
     quint32 alignedTexturePitch(quint32 rowPitch) const;
@@ -94,7 +89,7 @@ public:
     QImage readbackRGBA8888(ID3D12Resource *rt, D3D12_RESOURCE_STATES rtState, ID3D12GraphicsCommandList *commandList);
 
     DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
-    ID3D12Resource *createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor, int samples);
+    Microsoft::WRL::ComPtr<ID3D12Resource> createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor, int samples);
     ID3D12Resource *createDepthStencil(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, int samples);
 
 

@@ -10,6 +10,7 @@
 
 // #include <gl/Config.h>
 #include <d3d12.h>
+#include <wrl/client.h>
 #include <dxgiformat.h>
 #include <gpu/Forward.h>
 #include <gpu/Format.h>

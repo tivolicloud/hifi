@@ -157,8 +157,8 @@ DXGI_SAMPLE_DESC QD3D12Window::makeSampleDesc(DXGI_FORMAT format, int samples)
     return sampleDesc;
 }
 
-ID3D12Resource *QD3D12Window::createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
-                                                          const QSize &size, const float *clearColor, int samples)
+Microsoft::WRL::ComPtr<ID3D12Resource> QD3D12Window::createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
+                                                                                 const QSize &size, const float *clearColor, int samples)
 {
     D3D12_CLEAR_VALUE clearValue = {};
     clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -178,15 +178,14 @@ ID3D12Resource *QD3D12Window::createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_H
     rtDesc.SampleDesc = makeSampleDesc(rtDesc.Format, samples); // MSAA works here, unlike the backbuffer
     rtDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
-    ID3D12Resource *resource = Q_NULLPTR;
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
     if (FAILED(m_device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rtDesc,
                                                D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, IID_PPV_ARGS(&resource)))) {
         qWarning("Failed to create offscreen render target of size %dx%d", size.width(), size.height());
         return Q_NULLPTR;
     }
 
-    m_device->CreateRenderTargetView(resource, Q_NULLPTR, viewHandle);
-
+    m_device->CreateRenderTargetView(resource.Get(), Q_NULLPTR, viewHandle);
     return resource;
 }
 
@@ -480,17 +479,17 @@ D3D12_CPU_DESCRIPTOR_HANDLE QD3D12Window::extraDepthStencilCPUHandle(int idx) co
     return dsvHandle;
 }
 
-ID3D12Resource *QD3D12Window::createExtraRenderTargetAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
-                                                             const QSize &size,
-                                                             const float *clearColor,
-                                                             int samples)
+Microsoft::WRL::ComPtr<ID3D12Resource> QD3D12Window::createExtraRenderTargetAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
+                                                                                    const QSize &size,
+                                                                                    const float *clearColor,
+                                                                                    int samples)
 {
     return createOffscreenRenderTarget(viewHandle, size, clearColor, samples);
 }
 
-ID3D12Resource *QD3D12Window::createExtraDepthStencilAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
-                                                             const QSize &size,
-                                                             int samples)
+Microsoft::WRL::ComPtr<ID3D12Resource> QD3D12Window::createExtraDepthStencilAndView(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle,
+                                                                                    const QSize &size,
+                                                                                    int samples)
 {
     return createDepthStencil(viewHandle, size, samples);
 }

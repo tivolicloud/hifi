@@ -5,8 +5,8 @@
 //  Distributed under the Apache License, Version 2.0.
 //  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
 //
-#ifndef hifi_gpu_gl_GLTexture_h
-#define hifi_gpu_gl_GLTexture_h
+#ifndef hifi_gpu_d3d12_texture_h
+#define hifi_gpu_d3d12_texture_h
 
 #include <QtCore/QThreadPool>
 #include <QtConcurrent>
@@ -164,8 +164,8 @@ public:
     // const unsigned int _target;
     DXGI_FORMAT _texelFormat;
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC _shaderResourceView;
-    ID3D12Resource*                 _textureResource;
+    D3D12_SHADER_RESOURCE_VIEW_DESC         _shaderResourceView;
+    Microsoft::WRL::ComPtr<ID3D12Resource>  _textureResource;
 
     // static const std::vector<unsigned int>& getFaceTargets(unsigned int textureType);
     // static uint8_t getFaceCount(int textureType);
