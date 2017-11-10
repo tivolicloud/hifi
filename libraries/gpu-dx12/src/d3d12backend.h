@@ -56,7 +56,7 @@ namespace gpu { namespace d3d12 {
 class D3D12Backend : public Backend, public std::enable_shared_from_this<D3D12Backend> {
     // Context Backend static interface required
     friend class gpu::Context;
-    static void init();
+    void init();
     static BackendPointer createBackend();
 
 public:
@@ -256,9 +256,18 @@ public:
 
     bool isTextureManagementSparseEnabled() const override { return (_textureManagement._sparseCapable && Texture::getEnableSparseTextures()); }
 
+
+    Microsoft::WRL::ComPtr<ID3D12Device> getDevice()
+    {
+        return _device;
+    }
+
 protected:
 
     void recycle() const override;
+
+    Microsoft::WRL::ComPtr<ID3D12Device> _device;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> _commandQueue;
 
     static const size_t INVALID_OFFSET = (size_t)-1;
     bool _inRenderTransferPass { false };

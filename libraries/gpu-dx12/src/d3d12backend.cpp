@@ -15,6 +15,7 @@
 #include <list>
 #include <functional>
 #include <glm/gtc/type_ptr.hpp>
+#include <dxgi1_4.h>
 
 #if defined(NSIGHT_FOUND)
 #include "nvToolsExt.h"
@@ -22,7 +23,6 @@
 
 #include <shared/GlobalAppProperties.h>
 #include <GPUIdent.h>
-// #include <gl/QOpenGLContextWrapper.h>
 #include <QtCore/QProcessEnvironment>
 
 #include "d3d12texture.h"
@@ -36,6 +36,31 @@ static bool disableOpenGL45 = QProcessEnvironment::systemEnvironment().contains(
 
 static D3D12Backend* INSTANCE { nullptr };
 
+namespace 
+{
+    static void getHardwareAdapter(IDXGIFactory1 *factory, IDXGIAdapter1 **outAdapter, D3D_FEATURE_LEVEL featureLevel)
+    {
+        Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
+
+        for (int adapterIndex = 0; factory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND; ++adapterIndex) {
+            DXGI_ADAPTER_DESC1 desc;
+            adapter->GetDesc1(&desc);
+
+            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+                continue;
+
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), featureLevel, _uuidof(ID3D12Device), Q_NULLPTR))) {
+                const QString name = QString::fromUtf16((char16_t *)desc.Description);
+                qDebug("Using adapter '%s'", qPrintable(name));
+                break;
+            }
+        }
+
+        *outAdapter = adapter.Detach();
+    }
+}
+
+
 BackendPointer D3D12Backend::createBackend() {
     // The ATI memory info extension only exposes 'free memory' so we want to force it to 
     // cache the value as early as possible
@@ -45,6 +70,7 @@ BackendPointer D3D12Backend::createBackend() {
     // Where the gpuContext is initialized and where the TRUE Backend is created and assigned
     // TODO: Feature levels ? 
     std::shared_ptr<D3D12Backend> result = std::make_shared<gpu::d3d12::D3D12Backend>();
+    result->init();
     result->initInput();
     result->initTransform();
     result->initTextureManagementStage();
@@ -134,29 +160,72 @@ D3D12Backend::CommandCall D3D12Backend::_commandCalls[Batch::NUM_COMMANDS] =
     (&::gpu::d3d12::D3D12Backend::do_popProfileRange),
 };
 
-void D3D12Backend::init() {
-    static std::once_flag once;
-    std::call_once(once, [] {
-        // TODO: Fix this.
-        QString vendor; 
-        QString renderer;
-        // qCDebug(gpugllogging) << "GL Version: " << QString((const char*) glGetString(GL_VERSION));
-        // qCDebug(gpugllogging) << "GL Shader Language Version: " << QString((const char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
-        // qCDebug(gpugllogging) << "GL Vendor: " << vendor;
-        // qCDebug(gpugllogging) << "GL Renderer: " << renderer;
-        GPUIdent* gpu = GPUIdent::getInstance(vendor, renderer); 
-        // From here on, GPUIdent::getInstance()->getMumble() should efficiently give the same answers.
-        // qCDebug(gpugllogging) << "GPU:";
-        // qCDebug(gpugllogging) << "\tcard:" << gpu->getName();
-        // qCDebug(gpugllogging) << "\tdriver:" << gpu->getDriver();
-        // qCDebug(gpugllogging) << "\tdedicated memory:" << gpu->getMemory() << "MB";
+void D3D12Backend::init() 
+{
+    // TODO: Fix this. 
+    // Removed the init_once as it's possible to have more than adapter in the system.
+    QString vendor;
+    QString renderer;
+    GPUIdent* gpu = GPUIdent::getInstance(vendor, renderer);
+    // From here on, GPUIdent::getInstance()->getMumble() should efficiently give the same answers.
+    // qCDebug(gpugllogging) << "GPU:";
+    // qCDebug(gpugllogging) << "\tcard:" << gpu->getName();
+    // qCDebug(gpugllogging) << "\tdriver:" << gpu->getDriver();
+    // qCDebug(gpugllogging) << "\tdedicated memory:" << gpu->getMemory() << "MB";
+
+    Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+    {
+        debugController->EnableDebugLayer();
+    }
+
+    Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
+    if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)))) {
+        qWarning("Failed to create DXGI");
+        return;
+    }
+
+    D3D_FEATURE_LEVEL desiredFeatureLevel = D3D_FEATURE_LEVEL_12_1;
+    Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
+    getHardwareAdapter(factory.Get(), &adapter, desiredFeatureLevel);
+
+    bool warp = true;
+    if (adapter) {
+        HRESULT hr = D3D12CreateDevice(adapter.Get(), desiredFeatureLevel, IID_PPV_ARGS(&_device));
+        if (SUCCEEDED(hr))
+            warp = false;
+        else
+            qWarning("Failed to create device: 0x%x", hr);
+    }
+    else {
+        qWarning("No usable hardware adapters found");
+    }
+
+    if (warp) {
+        qDebug("Using WARP");
+        Microsoft::WRL::ComPtr<IDXGIAdapter> warpAdapter;
+        factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
+        HRESULT hr = D3D12CreateDevice(warpAdapter.Get(), desiredFeatureLevel, IID_PPV_ARGS(&_device));
+        if (FAILED(hr)) {
+            qWarning("Failed to create WARP device: 0x%x", hr);
+            return;
+        }
+    }
+
+    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+
+    if (FAILED(_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_commandQueue)))) {
+        qWarning("Failed to create command queue");
+        return;
+    }
+
 
 #if THREADED_TEXTURE_BUFFERING
         // This has to happen on the main thread in order to give the thread 
         // pool a reasonable parent object
-        GLVariableAllocationSupport::TransferJob::startBufferingThread();
+    GLVariableAllocationSupport::TransferJob::startBufferingThread();
 #endif
-    });
 }
 
 D3D12Backend::D3D12Backend(bool syncCache) {
