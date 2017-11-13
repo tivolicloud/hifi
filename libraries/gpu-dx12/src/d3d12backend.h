@@ -513,6 +513,8 @@ protected:
     virtual int makeOutputSlots(unsigned int glprogram, const Shader::BindingSet& slotBindings, Shader::SlotSet& outputs);
 
 
+    d3d12Framebuffer* createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor, int samples);
+
     // Synchronize the state cache of this Backend with the actual real state of the GL Context
     void syncOutputStateCache();
     void resetOutputStage();
@@ -537,8 +539,12 @@ protected:
     typedef void (D3D12Backend::*CommandCall)(const Batch&, size_t);
     static CommandCall _commandCalls[Batch::NUM_COMMANDS];
     friend class GLState;
+    friend class d3d12Framebuffer;
     friend class D3D12Texture;
     friend class D3DShader;
+
+    protected:
+        DXGI_SAMPLE_DESC makeSampleDesc(DXGI_FORMAT format, int samples);
 };
 
 } }

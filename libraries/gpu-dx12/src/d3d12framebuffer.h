@@ -19,15 +19,15 @@ public:
     static d3d12FramebufferType* sync(D3D12Backend& backend, const Framebuffer& framebuffer) {
         d3d12FramebufferType* object = Backend::getGPUObject<d3d12FramebufferType>(framebuffer);
 
-        bool needsUpate { false };
+        bool needsUpdate { false };
         if (!object ||
             framebuffer.getDepthStamp() != object->_depthStamp ||
             framebuffer.getColorStamps() != object->_colorStamps) {
-            needsUpate = true;
+            needsUpdate = true;
         }
 
         // If GPU object already created and in sync
-        if (!needsUpate) {
+        if (!needsUpdate) {
             return object;
         } else if (framebuffer.isEmpty()) {
             // NO framebuffer definition yet so let's avoid thinking
@@ -42,7 +42,6 @@ public:
             (void)CHECK_GL_ERROR();
         }
 
-        object->update();
         return object;
     }
 
@@ -56,13 +55,11 @@ public:
         }
     }
 
-    const unsigned int& _fbo { _id };
     std::vector<int> _colorBuffers;
     Stamp _depthStamp { 0 };
     std::vector<Stamp> _colorStamps;
 
 protected:
-    virtual void update() = 0;
     bool checkStatus() const;
 
     d3d12Framebuffer(const std::weak_ptr<D3D12Backend>& backend, const Framebuffer& framebuffer, unsigned int id) : DxObject(backend, framebuffer, id) {}

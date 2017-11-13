@@ -27,6 +27,7 @@
 
 #include "d3d12texture.h"
 #include "d3d12shader.h"
+#include "d3d12framebuffer.h"
 
 using namespace gpu;
 using namespace gpu::d3d12;
@@ -916,3 +917,65 @@ void D3D12Backend::do_multiDrawIndexedIndirect(const Batch& batch, size_t paramO
 void D3D12Backend::do_blit(const Batch& batch, size_t paramOffset)
 {
 }
+
+DXGI_SAMPLE_DESC D3D12Backend::makeSampleDesc(DXGI_FORMAT format, int samples)
+{
+    DXGI_SAMPLE_DESC sampleDesc;
+    sampleDesc.Count = 1;
+    sampleDesc.Quality = 0;
+
+    if (samples > 1) {
+        D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaInfo = {};
+        msaaInfo.Format = format;
+        msaaInfo.SampleCount = samples;
+        if (SUCCEEDED(_device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaInfo, sizeof(msaaInfo)))) {
+            if (msaaInfo.NumQualityLevels > 0) {
+                sampleDesc.Count = samples;
+                sampleDesc.Quality = msaaInfo.NumQualityLevels - 1;
+            }
+            else {
+                qWarning("No quality levels for multisampling?");
+            }
+        }
+        else {
+            qWarning("Failed to query multisample quality levels");
+        }
+    }
+
+    return sampleDesc;
+}
+
+d3d12Framebuffer* D3D12Backend::createOffscreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE viewHandle, const QSize &size, const float *clearColor, int samples)
+{
+    D3D12_CLEAR_VALUE clearValue = {};
+    clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    if (clearColor)
+    {
+        memcpy(clearValue.Color, clearColor, 4 * sizeof(float));
+    }
+
+    D3D12_HEAP_PROPERTIES heapProp = {};
+    heapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_RESOURCE_DESC rtDesc = {};
+    rtDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    rtDesc.Width = size.width();
+    rtDesc.Height = size.height();
+    rtDesc.DepthOrArraySize = 1;
+    rtDesc.MipLevels = 1;
+    rtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    rtDesc.SampleDesc = makeSampleDesc(rtDesc.Format, samples); // MSAA works here, unlike the back buffer
+    rtDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    if (FAILED(_device->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rtDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET, &clearValue, IID_PPV_ARGS(&resource)))) {
+        qWarning("Failed to create offscreen render target of size %dx%d", size.width(), size.height());
+        return nullptr;
+    }
+
+    _device->CreateRenderTargetView(resource.Get(), nullptr, viewHandle);
+    d3d12Framebuffer* result = nullptr;
+    return result;
+}
+
