@@ -4,3 +4,4 @@ setup_hifi_library()
 link_hifi_libraries(shared ktx)
 
 target_nsight()
+target_d3d12()

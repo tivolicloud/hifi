@@ -123,7 +123,7 @@ public:
     // Main thread operation to say that the buffer is ready to be used as a frame
     Update getUpdate() const;
 
-protected:
+// protected:
     // For use by the render thread to avoid the intermediate step of getUpdate/applyUpdate
     void flush() const;
 

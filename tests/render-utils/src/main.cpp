@@ -19,11 +19,12 @@
 
 #include <QDir>
 #include <QElapsedTimer>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QLoggingCategory>
 #include <QResizeEvent>
 #include <QTimer>
 #include <QWindow>
+#include <qd3d12window.h>
 
 class RateCounter {
     std::vector<float> times;
@@ -74,76 +75,80 @@ const QString& getQmlDir() {
 }
 
 // Create a simple OpenGL window that renders text in various ways
-class QTestWindow : public QWindow {
-    Q_OBJECT
-
-    QOpenGLContextWrapper _context;
-    QSize _size;
-    //TextRenderer* _textRenderer[4];
+class QTestWindow : public QD3D12Window 
+{
+public:
     RateCounter fps;
 
-protected:
-    void renderText();
+    void initializeD3D() override
+    {
+        f = createFence();
+        ID3D12Device *dev = dxDevice();
+        if (FAILED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, dxCommandAllocator(), Q_NULLPTR, IID_PPV_ARGS(&commandList)))) {
+            qWarning("Failed to create command list");
+            return;
+        }
+        commandList->Close();
+    }
 
-private:
-    void resizeWindow(const QSize& size) {
-        _size = size;
+    void resizeD3D(const QSize &size) override
+    {
+        qDebug("resize %d %d", size.width(), size.height());
+    }
+
+    void paintD3D() override
+    {
+        // TODO: This is check is needed as this example does not handle shutdown properly, 
+        //       and the QT timer could trigger a render after the window is closed. 
+        if (isVisible())
+        {
+            dxCommandAllocator()->Reset();
+            commandList->Reset(dxCommandAllocator(), Q_NULLPTR);
+
+            transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+            green += 0.01f;
+            if (green > 1.0f)
+                green = 0.0f;
+            const float clearColor[] = { 0.0f, green, 0.0f, 1.0f };
+            commandList->ClearRenderTargetView(backBufferRenderTargetCPUHandle(), clearColor, 0, Q_NULLPTR);
+
+            // D3D12_PRIMITIVE_TOPOLOGY x;
+            // commandList->IASetPrimitiveTopology(x);
+
+            transitionResource(backBufferRenderTarget(), commandList.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+            commandList->Close();
+
+            ID3D12CommandList *commandLists[] = { commandList.Get() };
+            dxCommandQueue()->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+            waitForGPU(f);
+        }
+    }
+
+    void releaseD3D() override
+    {
+    }
+
+    void afterPresent()
+    {
+        waitForGPU(f);
     }
 
 public:
-    QTestWindow() {
-        setSurfaceType(QSurface::OpenGLSurface);
-
-        QSurfaceFormat format;
-        // Qt Quick may need a depth and stencil buffer. Always make sure these are available.
-        format.setDepthBufferSize(16);
-        format.setStencilBufferSize(8);
-        setGLFormatVersion(format);
-        format.setProfile(QSurfaceFormat::OpenGLContextProfile::CoreProfile);
-        format.setOption(QSurfaceFormat::DebugContext);
-
-        setFormat(format);
-
-        _context.setFormat(format);
-        _context.create();
-
-        show();
-        makeCurrent();
-
-        gpu::Context::init<gpu::gl::GLBackend>();
-
-        qDebug() << (const char*)glGetString(GL_VERSION);
-
-        //_textRenderer[0] = TextRenderer::getInstance(SANS_FONT_FAMILY, 12, false);
-        //_textRenderer[1] = TextRenderer::getInstance(SERIF_FONT_FAMILY, 12, false,
-        //    TextRenderer::SHADOW_EFFECT);
-        //_textRenderer[2] = TextRenderer::getInstance(MONO_FONT_FAMILY, 48, -1,
-        //    false, TextRenderer::OUTLINE_EFFECT);
-        //_textRenderer[3] = TextRenderer::getInstance(INCONSOLATA_FONT_FAMILY, 24);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(0.2f, 0.2f, 0.2f, 1);
-        glDisable(GL_DEPTH_TEST);
-
-        makeCurrent();
-
-        resize(QSize(800, 600));
+    QTestWindow() : f(Q_NULLPTR), green(0)
+    {
     }
 
-    virtual ~QTestWindow() {
+    ~QTestWindow() 
+    {
+        delete f;
     }
 
-    void draw();
-    void makeCurrent() {
-        _context.makeCurrent(this);
-    }
-
-protected:
-
-    void resizeEvent(QResizeEvent* ev) override {
-        resizeWindow(ev->size());
-    }
+private:
+    Fence *f;
+    ComPtr<ID3D12GraphicsCommandList> commandList;
+    float green;
 };
 
 #ifndef SERIF_FONT_FAMILY
@@ -158,25 +163,6 @@ void testShaderBuild(const char* vs_src, const char * fs_src) {
     auto fs = gpu::Shader::createPixel(std::string(fs_src));
     auto pr = gpu::Shader::createProgram(vs, fs);
     gpu::Shader::makeProgram(*pr);
-}
-
-void QTestWindow::draw() {
-    if (!isVisible()) {
-        return;
-    }
-
-    makeCurrent();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, _size.width() * devicePixelRatio(), _size.height() * devicePixelRatio());
-
-    _context.swapBuffers(this);
-    glFinish();
-
-    fps.increment();
-    if (fps.elapsed() >= 2.0f) {
-        qDebug() << "FPS: " << fps.rate();
-        fps.reset();
-    }
 }
 
 void messageHandler(QtMsgType type, const QMessageLogContext& context, const QString& message) {
@@ -197,17 +183,22 @@ hifi.gpu=true
 
 int main(int argc, char** argv) {    
     QGuiApplication app(argc, argv);
-    qInstallMessageHandler(messageHandler);
-    QLoggingCategory::setFilterRules(LOG_FILTER_RULES);
+    // qInstallMessageHandler(messageHandler);
+    // QLoggingCategory::setFilterRules(LOG_FILTER_RULES);
+    
     QTestWindow window;
+    window.initialize();
+    window.resize(1280, 720);
+    window.showNormal();
+
     QTimer timer;
     timer.setInterval(1); // Qt::CoarseTimer acceptable
     app.connect(&timer, &QTimer::timeout, &app, [&] {
-        window.draw();
+        window.paintD3D();
+        window.flush();
     });
     timer.start();
     app.exec();
     return 0;
 }
 
-#include "main.moc"
