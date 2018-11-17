@@ -501,7 +501,20 @@ bool SendQueue::isInactive(bool attemptedToSendPacket) {
                 // We think the client is still waiting for data (based on the sequence number gap)
                 // Let's wait either for a response from the client or until the estimated timeout
                 // (plus the sync interval to allow the client to respond) has elapsed
-                auto waitDuration = std::chrono::microseconds(_estimatedTimeout + _syncInterval);
+                auto calculatedWait = _estimatedTimeout + _syncInterval;
+
+                if (calculatedWait < 0 || calculatedWait > 1000000) {
+                    qWarning() << "Unreasonable estimated timeout" << calculatedWait << "for destination" << _destination;
+                    qWarning() << "Clamping to min of 0 second and max of 1 second";
+
+                    if (calculatedWait < 0) {
+                        calculatedWait = 0;
+                    } else {
+                        calculatedWait = 1000000;
+                    }
+                }
+
+                auto waitDuration = std::chrono::microseconds(calculatedWait);
                 
                 // use our condition_variable_any to wait
                 auto cvStatus = _emptyCondition.wait_for(locker, waitDuration);
