@@ -45,6 +45,13 @@ ANDROID_PACKAGES = {
         'sharedLibFolder': 'lib',
         'includeLibs': ['libnvtt.so', 'libnvmath.so', 'libnvimage.so', 'libnvcore.so']
     },
+    'vive_3.0.104': {
+        'file': 'wvr_client_3.0.104.zip',
+        'versionId': 'ibEGxCqEwbJ8xsfm350mSnMXPB9kmNrN',
+        'checksum': '95b08392f8e71a779f08389e56e7441c',
+        'sharedLibFolder': 'jni/arm64-v8a',
+        'includeLibs': []
+    },
     'oculus_1.22': {
         'file': 'ovr_sdk_mobile_1.22.zip',
         'versionId': 'InhomR5gwkzyiLAelH3X9k4nvV3iIpA_',

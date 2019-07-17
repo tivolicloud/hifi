@@ -8,6 +8,10 @@ project(':oculus').projectDir = new File(settingsDir, 'libraries/oculus')
 include ':qt'
 project(':qt').projectDir = new File(settingsDir, 'libraries/qt')
 
+include ':vive'
+project(':vive').projectDir = new File(settingsDir, 'libraries/vive')
+
+
 //
 // Applications
 //
@@ -34,4 +38,9 @@ if (!getSettings().hasProperty("SUPPRESS_FRAME_PLAYER")) {
 if (!getSettings().hasProperty("SUPPRESS_QUEST_FRAME_PLAYER")) {
     include ':questFramePlayer'
     project(':questFramePlayer').projectDir = new File(settingsDir, 'apps/questFramePlayer')
+}
+
+if (!getSettings().hasProperty("SUPPRESS_VIVE_FRAME_PLAYER")) {
+    include ':viveFramePlayer'
+    project(':viveFramePlayer').projectDir = new File(settingsDir, 'apps/viveFramePlayer')
 }
