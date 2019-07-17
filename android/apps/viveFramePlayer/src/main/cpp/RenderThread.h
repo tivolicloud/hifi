@@ -15,7 +15,6 @@
 #include <gl/Config.h>
 #include <gl/Context.h>
 #include <gpu/gl/GLBackend.h>
-#include <ovr/VrHandler.h>
 
 class RenderThread : public GenericThread, ovr::VrHandler {
     using Parent = GenericThread;

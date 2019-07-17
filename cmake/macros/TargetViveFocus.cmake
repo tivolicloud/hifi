@@ -7,7 +7,7 @@ macro(target_vive_focus)
     set(VIVE_FOCUS_LIBRARY_DIR  ${INSTALL_DIR}/jni/arm64-v8a)
     
     # ????  which of these are required?
-    set(VIVE_FOCUS_LIB_NAMES dummy overlay_api vrapi vrcore vr_jni wvr_api wvr_ctf_internal_common wvr_internal_using_assimp wvr_monitor wvr_runtime)
+    set(VIVE_FOCUS_LIB_NAMES dummy overlay_api svrapi vrcore vr_jni wvr_api wvr_ctf_internal_common wvr_internal_using_assimp wvr_monitor wvr_runtime)
     foreach(LIB ${VIVE_FOCUS_LIB_NAMES})
         list(APPEND VIVE_FOCUS_LIBRARIES ${VIVE_FOCUS_LIBRARY_DIR}/lib${LIB}.so)
     endforeach()
