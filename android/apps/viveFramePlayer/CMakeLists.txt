@@ -8,7 +8,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp/scene"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp/shared"
 )
-target_link_libraries(${TARGET_NAME} android log m)
+target_link_libraries(${TARGET_NAME} android log m jnigraphics)
 target_opengl()
 target_vive_focus()
 
