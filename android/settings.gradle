@@ -2,14 +2,14 @@
 // Libraries
 //
 
-include ':oculus'
-project(':oculus').projectDir = new File(settingsDir, 'libraries/oculus')
+//include ':oculus'
+//project(':oculus').projectDir = new File(settingsDir, 'libraries/oculus')
+//
+//include ':qt'
+//project(':qt').projectDir = new File(settingsDir, 'libraries/qt')
 
-include ':qt'
-project(':qt').projectDir = new File(settingsDir, 'libraries/qt')
-
-include ':vive'
-project(':vive').projectDir = new File(settingsDir, 'libraries/vive')
+//include ':vive'
+//project(':vive').projectDir = new File(settingsDir, 'libraries/vive')
 
 
 //

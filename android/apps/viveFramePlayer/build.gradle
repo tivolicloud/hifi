@@ -37,7 +37,10 @@ android {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: '../../libraries/qt/libs')
-    implementation project(':qt')
-    implementation project(':vive')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //implementation files('libs/classes.jar')
+    //implementation project(':vive')
+    //implementation project(':qt')
+    //implementation "com.htc.vr.aar:wvr_client@aar"
+
 }
