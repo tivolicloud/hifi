@@ -13,32 +13,43 @@
     <uses-feature android:name="android.software.vr.mode" android:required="true"/>
     <uses-feature android:name="android.hardware.vr.high_performance" android:required="true"/>
 
-
     <application android:label="Frame Viewer"
         android:allowBackup="false"
-        android:name="org.qtproject.qt5.android.bindings.QtApplication"
         tools:ignore="GoogleAppIndexingWarning,MissingApplicationIcon">
-        <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
+        <meta-data android:name="minWaveSDKVersion" android:value="1" />
 
         <activity
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
             android:configChanges="screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode"
+            android:enableVrMode="@string/wvr_vr_mode_component"
             android:name=".ViveFramePlayer"
             android:label="Frame Player"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:screenOrientation="landscape"
             android:excludeFromRecents="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="com.htc.intent.category.VRAPP" />
             </intent-filter>
             <!-- JNI nonsense -->
-            <meta-data android:name="android.app.lib_name" android:value="questFramePlayer"/>
-            <!-- Qt nonsense -->
-            <meta-data android:name="android.app.qt_libs_resource_id" android:resource="@array/qt_libs"/>
-            <meta-data android:name="android.app.bundled_in_lib_resource_id" android:resource="@array/bundled_in_lib"/>
-            <meta-data android:name="android.app.bundled_in_assets_resource_id" android:resource="@array/bundled_in_assets"/>
-            <meta-data android:name="android.app.load_local_libs" android:value="plugins/platforms/android/libqtforandroid.so:plugins/bearer/libqandroidbearer.so:lib/libQt5QuickParticles.so"/>
+            <meta-data android:name="android.app.lib_name" android:value="viveFramePlayer"/>
         </activity>
+        <activity
+            android:name="com.htc.vr.sdk.VRNativeActivity"
+            tools:node="remove" />
+        <!--Please consider the DoF support of HMD and controller individually for your content.-->
+        <!--Set value “3DoF” if your content only considers the rotation pose. -->
+        <!--Set value “6DoF” if your content considers both rotation and position pose. -->
+        <!--Set value “3,6DoF” if your content is capable of supporting both 3 and 6 DoF playing. -->
+        <meta-data android:name="com.htc.vr.content.NumDoFHmd" android:value="3,6DoF"/>
+        <meta-data android:name="com.htc.vr.content.NumDoFController" android:value="3,6DoF"/>
+
+        <!--The value could be 0, 1 or 2. Use comma(,) between value if your content can support multiple cases.-->
+        <!--Set value “0” if your content supports gaze mode only. -->
+        <!--Set value “1” if your content only supports playing with one controler. -->
+        <!--Set value “1,2” if your content supports playing with either one controler or two controlers. -->
+        <!--Set value “0,1,2” if your content supports all cases, which mean user can play by gaze mode, one controller or two controllers. -->
+        <meta-data android:name="com.htc.vr.content.NumController" android:value="0,1,2"/>  <!--fill the value of how many controllers the application can support.-->
     </application>
 </manifest>
