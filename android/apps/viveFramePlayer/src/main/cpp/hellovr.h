@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <GLES3/gl31.h>
+#include <glad/glad.h>
 #include "shared/Matrices.h"
 
 #include <wvr/wvr_device.h>

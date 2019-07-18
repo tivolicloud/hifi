@@ -8,8 +8,7 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
-#include <GLES3/gl31.h>
-#include <GLES3/gl3ext.h>
+#include <glad/glad.h>
 
 class Texture {
 private:

@@ -8,10 +8,6 @@
 // conditions signed by you and all SDK and API requirements,
 // specifications, and documentation provided by HTC to You."
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl31.h>
-#include <GLES3/gl3ext.h>
 #include <glad/glad.h>
 #include <vector>
 

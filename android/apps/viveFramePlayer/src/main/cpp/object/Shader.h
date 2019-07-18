@@ -9,8 +9,7 @@
 // specifications, and documentation provided by HTC to You."
 
 #pragma once
-#include <GLES3/gl31.h>
-#include <GLES3/gl3ext.h>
+#include <glad/glad.h>
 #include <vector>
 #include <memory>
 

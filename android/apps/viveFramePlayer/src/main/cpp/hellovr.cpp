@@ -23,8 +23,7 @@
 #include <ControllerCube.h>
 #include <ReticlePointer.h>
 #include <FrameBufferObject.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl3.h>
+#include <glad/glad.h>
 
 #include <wvr/wvr.h>
 #include <wvr/wvr_render.h>
