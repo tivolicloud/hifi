@@ -60,18 +60,20 @@ int main(int argc, char *argv[]) {
 }
 
 extern "C" {
-    JNIEXPORT void JNICALL Java_com_htc_vr_samples_wvr_1hellovr_MainActivity_init(JNIEnv * env, jobject act, jobject am);
-    JNIEXPORT void JNICALL Java_com_htc_vr_samples_wvr_1hellovr_MainActivity_setFlag(JNIEnv * env, jclass clazz, jint flag);
+    JNIEXPORT void JNICALL Java_io_highfidelity_frameplayer_ViveFramePlayer_init(JNIEnv * env, jobject act, jobject am);
+    JNIEXPORT void JNICALL Java_io_highfidelity_frameplayer_ViveFramePlayer_setFlag(JNIEnv * env, jclass clazz, jint flag);
 };
 
-JNIEXPORT void JNICALL Java_com_htc_vr_samples_wvr_1hellovr_MainActivity_init(JNIEnv * env, jobject activityInstance, jobject assetManagerInstance) {
+
+
+JNIEXPORT void JNICALL Java_io_highfidelity_frameplayer_ViveFramePlayer_init(JNIEnv * env, jobject activityInstance, jobject assetManagerInstance) {
     LOGI("MainActivity_init: call  Context::getInstance()->init");
     Context::getInstance()->init(env, assetManagerInstance);
     LOGI("register WVR main when library loading");
     WVR_RegisterMain(main);
 }
 
-JNIEXPORT void JNICALL Java_com_htc_vr_samples_wvr_1hellovr_MainActivity_setFlag(JNIEnv * env, jclass clazz, jint flag) {
+JNIEXPORT void JNICALL Java_io_highfidelity_frameplayer_ViveFramePlayer_setFlag(JNIEnv * env, jclass clazz, jint flag) {
     // Flags are defined in java Activity.
     gDebug = (flag & 0x1) != 0;
     LOGD("gDebug = %d", gDebug ? 1 : 0);
