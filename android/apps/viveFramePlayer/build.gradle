@@ -2,6 +2,7 @@ import com.android.builder.core.BuilderConstants
 
 apply plugin: 'com.android.application'
 
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -36,11 +37,8 @@ android {
     }
 }
 
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    //implementation files('libs/classes.jar')
-    //implementation project(':vive')
-    //implementation project(':qt')
-    //implementation "com.htc.vr.aar:wvr_client@aar"
 
+
+dependencies {
+    implementation(name:'wvr_client', ext: 'aar')
 }
