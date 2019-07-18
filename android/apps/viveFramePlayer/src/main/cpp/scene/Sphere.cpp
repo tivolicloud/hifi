@@ -13,7 +13,7 @@
 #include <Shader.h>
 #include <Object.h>
 #include <VertexArrayObject.h>
-#include <GLES3/gl31.h>
+#include <glad/glad.h>
 
 #define VERTEX_POS_INDEX 0
 #define VERTEX_COLOR_INDEX 1

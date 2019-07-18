@@ -15,8 +15,7 @@
 #include <Texture.h>
 #include <Object.h>
 #include <VertexArrayObject.h>
-#include <GLES3/gl31.h>
-#include <GLES2/gl2ext.h>
+#include <glad/glad.h>
 
 
 #define VERTEX_POS_INDEX 0

@@ -15,8 +15,7 @@
 #include <Shader.h>
 #include <Texture.h>
 #include <VertexArrayObject.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl31.h>
+#include <glad/glad.h>
 #include <ControllerCube.h>
 
 //-----------------------------------------------------------------------------

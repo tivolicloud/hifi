@@ -14,7 +14,7 @@
 #include <Shader.h>
 #include <Texture.h>
 #include <VertexArrayObject.h>
-#include <GLES3/gl31.h>
+#include <glad/glad.h>
 #include <Picture.h>
 
 Picture::Picture() : Object() {

@@ -13,7 +13,7 @@
 #include <VertexArrayObject.h>
 #include <Shader.h>
 #include <Texture.h>
-#include <GLES3/gl31.h>
+#include <glad/glad.h>
 #include <log.h>
 #include <sys/time.h>
 #include <stdlib.h>
