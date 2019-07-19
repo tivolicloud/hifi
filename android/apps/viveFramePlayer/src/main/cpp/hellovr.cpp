@@ -24,6 +24,7 @@
 #include <ReticlePointer.h>
 #include <FrameBufferObject.h>
 #include <glad/glad.h>
+#include <egl/egl.h>
 
 #include <wvr/wvr.h>
 #include <wvr/wvr_render.h>
@@ -150,10 +151,17 @@ bool MainApplication::initVR() {
     return true;
 }
 
+static void* getGlProcessAddress(const char *namez) {
+    auto result = eglGetProcAddress(namez);
+    return (void*)result;
+}
+
+
 bool MainApplication::initGL() {
     LOGENTRY();
     mNearClip = 0.1f;
     mFarClip = 30.0f;
+    gladLoadGLES2Loader(getGlProcessAddress);
     printGLString("Version", GL_VERSION);
     printGLString("Vendor", GL_VENDOR);
     printGLString("Renderer", GL_RENDERER);
