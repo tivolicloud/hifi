@@ -1,0 +1,7 @@
+Fragment glsl notation
+
+c: has color input
+t: has texture coordinate input and a texture uniform
+i: has intensity input for light
+yuv: means using yuv texture.  has one texture coordinate input and two texture uniform.
+

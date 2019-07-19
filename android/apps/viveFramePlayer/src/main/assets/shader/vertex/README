@@ -1,0 +1,13 @@
+Vertex glsl notation
+
+v: has vertex array
+c: has color array
+t: has texture coordinate array
+n: has normal array
+o: means orthogonal, no mvp matrix input.
+skybox: for skybox usage
+
+for example:
+vt: Has an interleaved array with vertex and texture coordinate.
+vtn: Has an interleaved array with vertex, texture, and normal.
+
