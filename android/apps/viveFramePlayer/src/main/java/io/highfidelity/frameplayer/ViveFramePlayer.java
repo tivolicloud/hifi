@@ -36,8 +36,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.htc.vr.sdk.QtVRActivity;
 
-public class ViveFramePlayer extends VRActivity {
+public class ViveFramePlayer extends QtVRActivity {
     private static final String TAG = "wvr_hellovr";
 
     private static final String ACTION_SWITCH_DEBUG = "com.htc.vr.samples.wvr_hellovr.ACTION_SWITCH_DEBUG";
@@ -89,7 +90,7 @@ public class ViveFramePlayer extends VRActivity {
     static native void setFlag(int flag);
 
     @Override
-    protected void onCreate(Bundle icicle) {
+    public void onCreate(Bundle icicle) {
         Log.i(TAG,"onCreate:call init");
         init(getResources().getAssets());
         super.onCreate(icicle);

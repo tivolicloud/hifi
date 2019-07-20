@@ -40,5 +40,7 @@ android {
 
 
 dependencies {
+    implementation fileTree(include: ['*.jar'], dir: '../../libraries/qt/libs')
     implementation(name:'wvr_client', ext: 'aar')
+    implementation project(':qt')
 }
