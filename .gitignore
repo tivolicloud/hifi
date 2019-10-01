@@ -4,8 +4,39 @@ CMakeFiles/
 CMakeScripts/
 cmake_install.cmake
 build*/
+release*/
+debug*/
+gprof*/
+valgrind*/
+ext/
 Makefile
 *.user
+
+# Android Studio
+*.iml
+*.class
+local.properties
+android/gradle*
+android/.gradle
+android/**/src/main/jniLibs
+android/**/libs
+android/**/bin
+android/**/src/main/res/values/libs.xml
+android/**/src/main/assets
+android/**/gradle*
+*.class
+
+# Visual Studio
+/.vs
+
+# VSCode
+# List taken from Github Global Ignores master@435c4d92
+# https://github.com/github/gitignore/commits/master/Global/VisualStudioCode.gitignore
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 # Xcode
 *.xcodeproj
@@ -32,18 +63,48 @@ DerivedData
 interface/external/*/*
 !interface/external/*/readme.txt
 
-# ignore interface optional resources
-interface/resources/visage/*
-!interface/resources/visage/tracker.cfg
-
 # Ignore interfaceCache for Linux users
 interface/interfaceCache/
 
-# ignore audio-client externals 
+# ignore audio-client externals
 libraries/audio-client/external/*/*
 !libraries/audio-client/external/*/readme.txt
 
 gvr-interface/assets/oculussig*
 gvr-interface/libs/*
 
+# ignore files for various dev environments
 TAGS
+*.sw[po]
+*.jsc
+
+# ignore QML compilation output
+*.qmlc
+
+# ignore node files for the console
+node_modules
+npm-debug.log
+
+# ignore qmlc files generated from qml as cache
+*.qmlc
+# Android studio files
+*___jb_old___
+
+# Resource binary file
+interface/compiledResources
+
+# GPUCache
+interface/resources/GPUCache/*
+
+# package lock file for JSDoc tool
+tools/jsdoc/package-lock.json
+
+# Python compile artifacts
+**/__pycache__
+
+# ignore local unity project files for avatar exporter
+tools/unity-avatar-exporter
+
+server-console/package-lock.json
+vcpkg/
+/tools/nitpick/compiledResources

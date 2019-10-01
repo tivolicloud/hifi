@@ -42,8 +42,18 @@
 				<string>hifi</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>${MACOSX_BUNDLE_BUNDLE_NAME} APP URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>hifiapp</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string></string>
 </dict>
 </plist>

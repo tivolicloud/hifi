@@ -1,106 +1,109 @@
-Please read the [general build guide](BUILD.md) for information on dependencies required for all platforms. Only Windows specific instructions are found in this file.
+This is a stand-alone guide for creating your first High Fidelity build for Windows 64-bit.  
+## Building High Fidelity
+Note: We are now using Visual Studio 2017 or 2019 and Qt 5.12.3.  
+If you are upgrading from previous versions, do a clean uninstall of those versions before going through this guide.  
 
-###Visual Studio 2013
+Note: The prerequisites will require about 10 GB of space on your drive. You will also need a system with at least 8GB of main memory.
 
-You can use the Community or Professional editions of Visual Studio 2013.
+### Step 1. Visual Studio & Python 3.x
 
-You can start a Visual Studio 2013 command prompt using the shortcut provided in the Visual Studio Tools folder installed as part of Visual Studio 2013.
+If you don’t have Community or Professional edition of Visual Studio, download [Visual Studio Community 2019](https://visualstudio.microsoft.com/vs/). If you have Visual Studio 2017, you are not required to download Visual Studio 2019.
 
-Or you can start a regular command prompt and then run:
+When selecting components, check "Desktop development with C++". On the right on the Summary toolbar, select the following components.
 
-    "%VS120COMNTOOLS%\vsvars32.bat"
+#### If you're installing Visual Studio 2017,
 
-####Windows SDK 8.1
+* Windows 8.1 SDK and UCRT SDK
+* VC++ 2015.3 v14.00 (v140) toolset for desktop
 
-If using Visual Studio 2013 and building as a Visual Studio 2013 project you need the Windows 8 SDK which you should already have as part of installing Visual Studio 2013. You should be able to see it at `C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86`.
+#### If you're installing Visual Studio 2019,
 
-####nmake
+* MSVC v141 - VS 2017 C++ x64/x86 build tools
+* MSVC v140 - VS 2015 C++ build tools (v14.00)
 
-Some of the external projects may require nmake to compile and install. If it is not installed at the location listed below, please ensure that it is in your PATH so CMake can find it when required. 
+If you do not already have a Python 3.x development environment installed, also check "Python Development" in this screen.
 
-We expect nmake.exe to be located at the following path.
+If you already have Visual Studio installed and need to add Python, open the "Add or remove programs" control panel and find the "Microsoft Visual Studio Installer".  Select it and click "Modify".  In the installer, select "Modify" again, then check "Python Development" and allow the installer to apply the changes.
 
-    C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin
+### Step 1a.  Alternate Python
 
-###Qt
-You can use the online installer or the offline installer. If you use the offline installer, be sure to select the "OpenGL" version.
+If you do not wish to use the Python installation bundled with Visual Studio, you can download the installer from [here](https://www.python.org/downloads/).  Ensure you get version 3.6.6 or higher.
 
-NOTE: Qt does not support 64-bit builds on Windows 7, so you must use the 32-bit version of libraries for interface.exe to run. The 32-bit version of the static library is the one linked by our CMake find modules.
+### Step 2. Installing CMake
 
-* [Download the online installer](http://qt-project.org/downloads)
-    * When it asks you to select components, ONLY select the following:
-        * Qt > Qt 5.3.2 > **msvc2013 32-bit OpenGL**
+Download and install the latest version of CMake 3.15. 
+ * Note that earlier versions of CMake will work, but there is a specific bug related to the interaction of Visual Studio 2019 and CMake versions prior to 3.15 that will cause Visual Studio to rebuild far more than it needs to on every build
 
-* [Download the offline installer](http://download.qt-project.org/official_releases/qt/5.3/5.3.2/qt-opensource-windows-x86-msvc2013_opengl-5.3.2.exe)
+Download the file named win64-x64 Installer from the [CMake Website](https://cmake.org/download/). You can access the installer on this [3.15 Version page](https://cmake.org/files/v3.15/). During installation, make sure to check "Add CMake to system PATH for all users" when prompted.
 
-Once Qt is installed, you need to manually configure the following:
-* Set the QT_CMAKE_PREFIX_PATH environment variable to your `Qt\5.3.2\msvc2013_opengl\lib\cmake` directory.
-  * You can set an environment variable from Control Panel > System > Advanced System Settings > Environment Variables > New
+### Step 3. Create VCPKG environment variable
+In the next step, you will use CMake to build High Fidelity. By default, the CMake process builds dependency files in Windows' `%TEMP%` directory, which is periodically cleared by the operating system. To prevent you from having to re-build the dependencies in the event that Windows clears that directory, we recommend that you create a `HIFI_VCPKG_BASE` environment variable linked to a directory somewhere on your machine. That directory will contain all dependency files until you manually remove them.
 
-###External Libraries
+To create this variable:
+* Naviagte to 'Edit the System Environment Variables' Through the start menu.
+* Click on 'Environment Variables'
+* Select 'New' 
+* Set "Variable name" to `HIFI_VCPKG_BASE`
+* Set "Variable value" to any directory that you have control over.
 
-As it stands, Hifi/Interface is a 32-bit application, so all libraries should also be 32-bit.
+Additionally, if you have Visual Studio 2019 installed and _only_ Visual Studio 2019 (i.e. you do not have Visual Studio 2017 installed) you must add an additional environment variable `HIFI_VCPKG_BOOTSTRAP` that will fix a bug in our `vcpkg` pre-build step.
 
-CMake will need to know where the headers and libraries for required external dependencies are. 
+To create this variable:
+* Naviagte to 'Edit the System Environment Variables' Through the start menu.
+* Click on 'Environment Variables'
+* Select 'New' 
+* Set "Variable name" to `HIFI_VCPKG_BOOTSTRAP`
+* Set "Variable value" to `1`
 
-We use CMake's `fixup_bundle` to find the DLLs all of our exectuable targets require, and then copy them beside the executable in a post-build step. If `fixup_bundle` is having problems finding a DLL, you can fix it manually on your end by adding the folder containing that DLL to your path. Let us know which DLL CMake had trouble finding, as it is possible a tweak to our CMake files is required.
+### Step 4. Running CMake to Generate Build Files
 
-The recommended route for CMake to find the external dependencies is to place all of the dependencies in one folder and set one ENV variable - HIFI_LIB_DIR. That ENV variable should point to a directory with the following structure:
+Run Command Prompt from Start and run the following commands:  
+`cd "%HIFI_DIR%"`  
+`mkdir build`  
+`cd build`  
 
-    root_lib_dir
-        -> openssl
-            -> bin
-            -> include
-            -> lib
+#### If you're using Visual Studio 2017,
+Run `cmake .. -G "Visual Studio 15 Win64"`.
 
-For many of the external libraries where precompiled binaries are readily available you should be able to simply copy the extracted folder that you get from the download links provided at the top of the guide. Otherwise you may need to build from source and install the built product to this directory. The `root_lib_dir` in the above example can be wherever you choose on your system - as long as the environment variable HIFI_LIB_DIR is set to it. From here on, whenever you see %HIFI_LIB_DIR% you should substitute the directory that you chose.
+#### If you're using Visual Studio 2019,
+Run `cmake .. -G "Visual Studio 16 2019" -A x64`.
 
-####OpenSSL
+Where `%HIFI_DIR%` is the directory for the highfidelity repository.
 
-Qt will use OpenSSL if it's available, but it doesn't install it, so you must install it separately.
+### Step 5. Making a Build
 
-Your system may already have several versions of the OpenSSL DLL's (ssleay32.dll, libeay32.dll) lying around, but they may be the wrong version. If these DLL's are in the PATH then QT will try to use them, and if they're the wrong version then you will see the following errors in the console:
+Open `%HIFI_DIR%\build\hifi.sln` using Visual Studio.
 
-    QSslSocket: cannot resolve TLSv1_1_client_method
-    QSslSocket: cannot resolve TLSv1_2_client_method
-    QSslSocket: cannot resolve TLSv1_1_server_method
-    QSslSocket: cannot resolve TLSv1_2_server_method
-    QSslSocket: cannot resolve SSL_select_next_proto
-    QSslSocket: cannot resolve SSL_CTX_set_next_proto_select_cb
-    QSslSocket: cannot resolve SSL_get0_next_proto_negotiated
+Change the Solution Configuration (menu ribbon under the menu bar, next to the green play button) from "Debug" to "Release" for best performance.
 
-To prevent these problems, install OpenSSL yourself. Download the following binary packages [from this website](http://slproweb.com/products/Win32OpenSSL.html):
-* Visual C++ 2008 Redistributables
-* Win32 OpenSSL v1.0.1L
+Run from the menu bar `Build > Build Solution`.
 
-Install OpenSSL into the Windows system directory, to make sure that Qt uses the version that you've just installed, and not some other version.
+### Step 6. Testing Interface
 
-###vhacd
-Download it directly from https://github.com/virneo/v-hacd
+Create another environment variable (see Step #3)
+* Set "Variable name": `_NO_DEBUG_HEAP`
+* Set "Variable value": `1`
 
-To build it run the following commands
-	1. cd src\
-	2. mkdir build
-	3. cd build
-	4. cmake ..
-	
-Build using visual studio 2013. Build ALL_BUILD and INSTALL targets both in Release and Debug.
+Restart Visual Studio again.
 
-This will create an output folder with include and lib directory inside it.
+In Visual Studio, right+click "interface" under the Apps folder in Solution Explorer and select "Set as Startup Project". Run from the menu bar `Debug > Start Debugging`.
 
-Either copy the contents of output folder to ENV %HIFI_LIB_DIR%/vhacd or create an environment variable VHACD_ROOT_DIR to this output directory.
+Now, you should have a full build of High Fidelity and be able to run the Interface using Visual Studio. Please check our [Docs](https://wiki.highfidelity.com/wiki/Main_Page) for more information regarding the programming workflow.
 
-###Build High Fidelity using Visual Studio
-Follow the same build steps from the CMake section of [BUILD.md](BUILD.md), but pass a different generator to CMake.
+Note: You can also run Interface by launching it from command line or File Explorer from `%HIFI_DIR%\build\interface\Release\interface.exe`
 
-    cmake .. -G "Visual Studio 12"
+## Troubleshooting
 
-Open %HIFI_DIR%\build\hifi.sln and compile.
+For any problems after Step #6, first try this:  
+* Delete your locally cloned copy of the highfidelity repository  
+* Restart your computer  
+* Redownload the [repository](https://github.com/highfidelity/hifi)  
+* Restart directions from Step #6  
 
-###Running Interface
-If you need to debug Interface, you can run interface from within Visual Studio (see the section below). You can also run Interface by launching it from command line or File Explorer from %HIFI_DIR%\build\interface\Debug\interface.exe
+#### CMake gives you the same error message repeatedly after the build fails
 
-###Debugging Interface
-* In the Solution Explorer, right click interface and click Set as StartUp Project
-* Set the "Working Directory" for the Interface debugging sessions to the Debug output directory so that your application can load resources. Do this: right click interface and click Properties, choose Debugging from Configuration Properties, set Working Directory to .\Debug
-* Now you can run and debug interface through Visual Studio
+Remove `CMakeCache.txt` found in the `%HIFI_DIR%\build` directory.
+
+#### CMake can't find OpenSSL
+
+Remove `CMakeCache.txt` found in the `%HIFI_DIR%\build` directory.  Verify that your HIFI_VCPKG_BASE environment variable is set and pointing to the correct location.  Verify that the file `${HIFI_VCPKG_BASE}/installed/x64-windows/include/openssl/ssl.h` exists.
