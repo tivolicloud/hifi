@@ -1,4 +1,4 @@
-if(DEFINED ENV{JENKINS_HOME})
+if(NOT DEFINED ENV{CIRCLECI})
   message(FATAL_ERROR "Prevent Jenkins build for this test PR")
 endif()
 

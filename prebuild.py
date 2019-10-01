@@ -142,6 +142,11 @@ def main():
         with timer('Cleaning builds'):
             pm.cleanBuilds()
 
+        # If not android, install our Qt build
+        if not args.android:
+            print("Installing Qt")
+            pm.installQt()
+            
         # If we're running in android mode, we also need to grab a bunch of additional binaries
         # (this logic is all migrated from the old setupDependencies tasks in gradle)
         if args.android:

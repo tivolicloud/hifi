@@ -169,6 +169,12 @@ endif()
         hifi_utils.executeSubprocess(actualCommands, folder=self.path)
 
     def setupDependencies(self):
+        # if True:
+        #     url = "https://hifi-public.s3.amazonaws.com/dependencies/vcpkg/builds/258877bd/258877bd-win32.zip"
+        #     dest = self.path
+        #     hifi_utils.downloadAndExtract(url, dest, isZip=True)
+        #     return
+
         # Special case for android, grab a bunch of binaries
         # FIXME remove special casing for android builds eventually
         if self.args.android:
@@ -183,11 +189,6 @@ endif()
             print("Installing build dependencies")
             self.run(['install', '--triplet', self.triplet, 'hifi-client-deps'])
             
-        # If not android, install our Qt build
-        if not self.args.android:
-            print("Installing Qt")
-            self.installQt()
-
     def cleanBuilds(self):
         # Remove temporary build artifacts
         builddir = os.path.join(self.path, 'buildtrees')
