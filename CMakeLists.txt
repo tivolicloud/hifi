@@ -1,3 +1,7 @@
+if(DEFINED ENV{JENKINS_HOME})
+  message(FATAL_ERROR "Prevent Jenkins build for this test PR")
+endif()
+
 # If we're running under the gradle build, HIFI_ANDROID will be set here, but
 # ANDROID will not be set until after the `project` statement.  This is the *ONLY*
 # place you need to use `HIFI_ANDROID` instead of `ANDROID`
