@@ -39,6 +39,16 @@
       "name": "H1-F1 Optical Interpreter bot",
       "preview_image": "https://hifi-metaverse.s3-us-west-1.amazonaws.com/marketplace/previews/469c8b66-e3c2-47fb-9820-e306b1dd15c4/large/hifi-mp-469c8b66-e3c2-47fb-9820-e306b1dd15c4.jpg",
       "url": "http://mpassets.highfidelity.com/469c8b66-e3c2-47fb-9820-e306b1dd15c4-v1/optical_interpreter[1].fst"
-    }
+    },
+    {
+      "name": "Philip Doob",
+      "preview_image": "https://hifi-metaverse.s3-us-west-1.amazonaws.com/marketplace/previews/469c8b66-e3c2-47fb-9820-e306b1dd15c4/large/hifi-mp-469c8b66-e3c2-47fb-9820-e306b1dd15c4.jpg",
+      "url": "https://hifi-content.s3.amazonaws.com/jimi/avatar/doob/philip_rosedale/newFST/19.fst"
+    },
+    {
+      "name": "Brad",
+      "preview_image": "https://hifi-metaverse.s3-us-west-1.amazonaws.com/marketplace/previews/469c8b66-e3c2-47fb-9820-e306b1dd15c4/large/hifi-mp-469c8b66-e3c2-47fb-9820-e306b1dd15c4.jpg",
+      "url": "https://metaverse.highfidelity.com/api/v1/commerce/entity_edition/ff7cbca8-9eab-4413-b490-78adefd76771.fst?certificate_id=MEQCIGIopGI2HD9wh2PgOfVLKJC92oiWI3ny1uzCiM9ILNjpAiBAHunfq81Q1Wzrinqgvb745YakcoMM8FahzN2AJI1PiA%3D%3D"
+    }      
   ]
 }
