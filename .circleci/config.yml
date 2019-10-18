@@ -1,7 +1,9 @@
 version: 2.1
+orbs:
+  win: circleci/windows@1.0.0
 
 jobs:
-  build:
+  build-mac:
     macos:
       xcode: "10.3.0"
     environment:
@@ -14,8 +16,8 @@ jobs:
           command: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
           
       - run:
-          name: Install cmake
-          command: brew install cmake
+          name: Install dependencies
+          command: brew install cmake openssl
 
       - restore_cache:
           keys:
@@ -53,162 +55,153 @@ jobs:
           command: cmake --build /Users/distiller/project/build --target interface
 
 
+  build-win:
+    executor:
+        name: win/vs2019
+        shell: bash.exe
 
+    environment:
+      HIFI_VCPKG_BASE: /c/Users/circleci/hifi-vcpkg
 
-
-
-# version: 2.1
-# orbs:
-#   win: circleci/windows@1.0.0
-
-# jobs:
-#   build:
-#     executor:
-#         name: win/vs2019
-#         shell: bash.exe
-
-#     environment:
-#       HIFI_VCPKG_BASE: /c/Users/circleci/hifi-vcpkg
-
-#     steps:
-#       - run:
-#           name: Install deps
-#           shell: powershell.exe
-#           command: |
-#             $ProgressPreference = "SilentlyContinue"
-#             cd ..
-#             wget "https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.zip" -outfile "cmake.zip"
-#             expand-archive -path 'cmake.zip' -destinationpath '.\cmake'
+    steps:
+      - run:
+          name: Install deps
+          shell: powershell.exe
+          command: |
+            $ProgressPreference = "SilentlyContinue"
+            cd ..
+            wget "https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-win64-x64.zip" -outfile "cmake.zip"
+            expand-archive -path 'cmake.zip' -destinationpath '.\cmake'
 
       
-#       # - run:
-#       #     name: Install Windows build tools
-#       #     command: npm install --global --production windows-build-tools
+      # - run:
+      #     name: Install Windows build tools
+      #     command: npm install --global --production windows-build-tools
 
-#       - restore_cache:
-#           keys:
-#             - source-v1-{{ .Branch }}-{{ .Revision }}
-#             - source-v1-{{ .Branch }}-
-#             - source-v1-
+      - restore_cache:
+          keys:
+            - win-source-v1-{{ .Branch }}-{{ .Revision }}
+            - win-source-v1-{{ .Branch }}-
+            - win-source-v1-
 
-#       - checkout
+      - checkout
 
-#       - save_cache:
-#           key: source-v1-{{ .Branch }}-{{ .Revision }}
-#           paths:
-#             - ".git"
+      - save_cache:
+          key: win-source-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
       
-#       - restore_cache:
-#           keys:
-#             - build-v1-{{ .Branch }}-{{ .Revision }}
-#             - build-v1-{{ .Branch }}-
-#             - build-v1-
+      # - restore_cache:
+      #     keys:
+      #       - build-v1-{{ .Branch }}-{{ .Revision }}
+      #       - build-v1-{{ .Branch }}-
+      #       - build-v1-
 
-#       - run:
-#           name: Compound tasks
-#           command: |
-#             echo "[DEBUG INFO] cmake"
-#             pwd
-#             ls .
-#             mkdir -p /c/Users/circleci/hifi-vcpkg
-#             mkdir build
-#             cd build
-#             /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_ONLY=ON -DBUILD_SERVER=OFF -DBUILD_TESTS=OFF -DBUILD_TOOLS=OFF -A x64
-#             echo "[DEBUG INFO] make interface"
-#             pwd
-#             ls .
-#             /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe --build . --config Release --target packaged-server-console
-#             echo "[DEBUG INFO] make server"
-#             pwd
-#             ls .
-#             /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe --build . --config Release --target package
-#             echo "[DEBUG INFO] end"
-#             pwd
-#             ls .
+      - run:
+          name: Compound tasks
+          command: |
+            echo "[DEBUG INFO] cmake"
+            pwd
+            ls .
+            mkdir -p /c/Users/circleci/hifi-vcpkg
+            mkdir build
+            cd build
+            /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_ONLY=ON -DBUILD_SERVER=OFF -DBUILD_TESTS=OFF -DBUILD_TOOLS=OFF -A x64
+            echo "[DEBUG INFO] make interface"
+            pwd
+            ls .
+            /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe --build . --config Release --target packaged-server-console
+            echo "[DEBUG INFO] make server"
+            pwd
+            ls .
+            /c/Users/circleci/cmake/cmake-3.15.4-win64-x64/bin/cmake.exe --build . --config Release --target package
+            echo "[DEBUG INFO] end"
+            pwd
+            ls .
 
-#       - save_cache:
-#           key: build-v1-{{ .Branch }}-{{ .Revision }}
-#           paths:
-#             - "build"
+      # - save_cache:
+      #     key: build-v1-{{ .Branch }}-{{ .Revision }}
+      #     paths:
+      #       - "build"
 
+  build-linux:
+    docker:
+      - image: circleci/buildpack-deps:16.04
 
+    environment:
+      HIFI_VCPKG_BASE: /home/circleci/hifi-vcpkg
+      CCACHE_DIR: /home/circleci/.ccache
+      USE_CCACHE: True
 
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y ccache python3 libssl-dev mesa-utils libpulse0 libnss3 libnspr4 libfontconfig1 libxcursor1 libxcomposite1 libxtst6 libxslt1.1 libasound2 libxmu-dev libxi-dev freeglut3-dev libasound2-dev libjack0 libjack-dev libxrandr-dev libudev-dev libssl-dev zlib1g-dev
 
+      - run:
+          name: Install cmake
+          working_directory: /home/circleci
+          command: |
+            wget https://cmake.org/files/v3.14/cmake-3.14.2-Linux-x86_64.sh
+            sudo sh cmake-3.14.2-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir
 
+      - restore_cache:
+          keys:
+            - linux-source-v1-{{ .Branch }}-{{ .Revision }}
+            - linux-source-v1-{{ .Branch }}-
+            - linux-source-v1-
 
+      - checkout
 
+      - save_cache:
+          key: linux-source-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
 
-# version: 2.1
-# jobs:
-#   build:
-#     docker:
-#       - image: circleci/buildpack-deps:16.04
+      - run:
+          name: Download VCPKG deps
+          command: |
+            mkdir -p $HIFI_VCPKG_BASE
+            cd $HIFI_VCPKG_BASE
+            wget https://hifi-content.s3-us-west-1.amazonaws.com/clement/dev/vcpkg.tar.gz
+            tar -xf vcpkg.tar.gz
 
-#     environment:
-#       HIFI_VCPKG_BASE: /home/circleci/hifi-vcpkg
-#       CCACHE_DIR: /home/circleci/.ccache
-#       USE_CCACHE: True
+      - restore_cache:
+          keys:
+            - build-cache-v1-{{ .Branch }}-{{ .Revision }}
+            - build-cache-v1-{{ .Branch }}-
+            - build-cache-v1-
 
-#     steps:
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             sudo apt-get update
-#             sudo apt-get install -y ccache python3 libssl-dev mesa-utils libpulse0 libnss3 libnspr4 libfontconfig1 libxcursor1 libxcomposite1 libxtst6 libxslt1.1 libasound2 libxmu-dev libxi-dev freeglut3-dev libasound2-dev libjack0 libjack-dev libxrandr-dev libudev-dev libssl-dev zlib1g-dev
+      - run:
+          name: Setup workspace
+          command: |
+            cmake -E make_directory /home/circleci/project/build
+            mkdir -p $CCACHE_DIR
 
-#       - run:
-#           name: Install cmake
-#           command: |
-#             wget https://cmake.org/files/v3.14/cmake-3.14.2-Linux-x86_64.sh
-#             sudo sh cmake-3.14.2-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir
+      - run:
+          name: Run cmake
+          working_directory: /home/circleci/project/build
+          command: cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCLIENT_ONLY=ON -DBUILD_SERVER=OFF -DBUILD_TESTS=OFF -DBUILD_TOOLS=OFF /home/circleci/project
 
-#       - restore_cache:
-#           keys:
-#             - source-v1-{{ .Branch }}-{{ .Revision }}
-#             - source-v1-{{ .Branch }}-
-#             - source-v1-
+      - run:
+          name: Build Interface
+          command: cmake --build /home/circleci/project/build --target interface -- -j2
 
-#       - checkout
+      - run:
+          name: CCache stats
+          command: ccache -s
 
-#       - save_cache:
-#           key: source-v1-{{ .Branch }}-{{ .Revision }}
-#           paths:
-#             - ".git"
+      - save_cache:
+          key: build-cache-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - "/home/circleci/.ccache"
 
-#       - run:
-#           name: Download VCPKG deps
-#           command: |
-#             mkdir -p $HIFI_VCPKG_BASE
-#             cd $HIFI_VCPKG_BASE
-#             wget https://hifi-content.s3-us-west-1.amazonaws.com/clement/dev/vcpkg.tar.gz
-#             tar -xf vcpkg.tar.gz
-
-#       - restore_cache:
-#           keys:
-#             - build-cache-v1-{{ .Branch }}-{{ .Revision }}
-#             - build-cache-v1-{{ .Branch }}-
-#             - build-cache-v1-
-
-#       - run:
-#           name: Setup workspace
-#           command: |
-#             cmake -E make_directory /home/circleci/project/build
-#             mkdir -p $CCACHE_DIR
-
-#       - run:
-#           name: Run cmake
-#           working_directory: /home/circleci/project/build
-#           command: cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCLIENT_ONLY=ON -DBUILD_SERVER=OFF -DBUILD_TESTS=OFF -DBUILD_TOOLS=OFF /home/circleci/project
-
-#       - run:
-#           name: Build Interface
-#           command: cmake --build /home/circleci/project/build --target interface -- -j2
-
-#       - run:
-#           name: CCache stats
-#           command: ccache -s
-
-#       - save_cache:
-#           key: source-v1-{{ .Branch }}-{{ .Revision }}
-#           paths:
-#             - "/home/circleci/.ccache"
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-mac
+      - build-win
+      - build-linux
